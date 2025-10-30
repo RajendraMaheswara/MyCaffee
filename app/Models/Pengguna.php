@@ -10,7 +10,7 @@ class Pengguna extends Authenticatable
 {
     use HasApiTokens, Notifiable;
 
-    protected $table = 'penggunas';
+    protected $table = 'pengguna';
 
     protected $fillable = [
         'username',

@@ -1,0 +1,44 @@
+<?php
+
+namespace App\Http\Resources;
+
+use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\JsonResource;
+
+class MenuResource extends JsonResource
+{
+    // properti custom
+    public $status;
+    public $message;
+    public $resource;
+
+    /**
+     * Constructor
+     *
+     * @param  mixed $status
+     * @param  mixed $message
+     * @param  mixed $resource
+     * @return void
+     */
+    public function __construct($status, $message, $resource)
+    {
+        parent::__construct($resource);
+        $this->status  = $status;
+        $this->message = $message;
+    }
+
+    /**
+     * toArray
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return array
+     */
+    public function toArray(Request $request): array
+    {
+        return [
+            'success' => $this->status,
+            'message' => $this->message,
+            'data'    => $this->resource,
+        ];
+    }
+}

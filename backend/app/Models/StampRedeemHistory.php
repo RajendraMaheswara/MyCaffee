@@ -4,20 +4,19 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class DetailPesanan extends Model
+class StampRedeemHistory extends Model
 {
-    protected $table = 'detail_pesanan';
+    protected $table = 'stamp_redeem_history';
 
     protected $fillable = [
-        'pesanan_id',
+        'user_id',
         'menu_id',
-        'jumlah',
-        'harga_satuan'
+        'stamp_used',
     ];
 
-    public function pesanan()
+    public function user()
     {
-        return $this->belongsTo(Pesanan::class, 'pesanan_id', 'id');
+        return $this->belongsTo(User::class);
     }
 
     public function menu()

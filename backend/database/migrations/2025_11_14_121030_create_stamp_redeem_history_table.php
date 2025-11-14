@@ -8,18 +8,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('detail_pesanan', function (Blueprint $table) {
+        Schema::create('stamp_redeem_history', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('pesanan_id')->constrained('pesanan')->cascadeOnDelete();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
             $table->foreignId('menu_id')->constrained('menu')->cascadeOnDelete();
-            $table->integer('jumlah');
-            $table->decimal('harga_satuan', 10, 2);
+            $table->integer('stamp_used')->default(10);
             $table->timestamps();
         });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('detail_pesanan');
+        Schema::dropIfExists('stamp_redeem_history');
     }
 };

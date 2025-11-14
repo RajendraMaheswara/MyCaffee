@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 class Menu extends Model
 {
     protected $table = 'menu';
-    protected $primaryKey = 'id_menu';
 
     protected $fillable = [
         'nama_menu',

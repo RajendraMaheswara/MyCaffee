@@ -3,17 +3,16 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Pesanan extends Model
 {
     protected $table = 'pesanan';
-    protected $primaryKey = 'id_pesanan';
 
     protected $fillable = [
-        'id_kasir',
+        'kasir_id',
+        'user_id',
         'nomor_meja',
+        'jumlah_stamp',
         'tanggal_pesan',
         'total_harga',
         'status_pesanan',
@@ -22,13 +21,29 @@ class Pesanan extends Model
         'tanggal_pembayaran',
     ];
 
-    public function kasir(): BelongsTo
+    public function kasir()
     {
-        return $this->belongsTo(User::class, 'id_kasir', 'id');
+        return $this->belongsTo(User::class, 'kasir_id', 'id');
     }
 
-    public function detailPesanan(): HasMany
+    public function user()
     {
-        return $this->hasMany(DetailPesanan::class, 'id_pesanan', 'id');
+        return $this->belongsTo(User::class, 'user_id', 'id');
+    }
+
+    public function detailPesanan()
+    {
+        return $this->hasMany(DetailPesanan::class, 'pesanan_id', 'id');
+    }
+
+    public function hitungStamp()
+    {
+        $stamp = 0;
+        foreach ($this->detailPesanan as $detail) {
+            if ($detail->harga_satuan >= 25000) {
+                $stamp += $detail->jumlah;
+            }
+        }
+        return $stamp;
     }
 }

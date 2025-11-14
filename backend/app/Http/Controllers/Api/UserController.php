@@ -4,27 +4,34 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Http\Resources\UserResource;
-use App\Http\Resources\UserResourse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
+    // GET /users
     public function index()
     {
-        $users = User::latest()->paginate(5);
-        return new UserResourse(true, 'List Data User', $users);
+        $users = User::latest()->paginate(10);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'List Data User',
+            'data' => $users
+        ]);
     }
 
+    // POST /users (admin menambah user)
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'username'      => 'required|string|max:50|unique:users',
-            'password'      => 'required|string|min:4',
-            'nama_lengkap'  => 'nullable|string|max:100',
-            'peran'         => 'required|in:admin,kasir',
+            'username'     => 'required|string|max:50|unique:users',
+            'email'        => 'required|string|email|unique:users,email',
+            'password'     => 'required|string|min:4',
+            'nama_lengkap' => 'nullable|string|max:100',
+            'peran'        => 'required|in:admin,kasir,user',
+            'total_stamp'  => 'nullable|integer|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -32,37 +39,58 @@ class UserController extends Controller
         }
 
         $user = User::create([
-            'username' => $request->username,
-            'password' => Hash::make($request->password),
+            'username'     => $request->username,
+            'email'        => $request->email,
+            'password'     => Hash::make($request->password),
             'nama_lengkap' => $request->nama_lengkap,
-            'peran' => $request->peran,
+            'peran'        => $request->peran,
+            'total_stamp'  => $request->total_stamp ?? 0,
         ]);
 
-        return new UserResourse(true, 'Data User Berhasil Ditambahkan!', $user);
+        return response()->json([
+            'success' => true,
+            'message' => 'User berhasil ditambahkan!',
+            'data' => $user
+        ], 201);
     }
 
+    // GET /users/{id}
     public function show($id)
     {
         $user = User::find($id);
+
         if (!$user) {
-            return response()->json(['success' => false, 'message' => 'Data User Tidak Ditemukan!'], 404);
+            return response()->json([
+                'success' => false,
+                'message' => 'User tidak ditemukan'
+            ], 404);
         }
 
-        return new UserResourse(true, 'Detail Data User!', $user);
+        return response()->json([
+            'success' => true,
+            'message' => 'Detail user',
+            'data' => $user
+        ]);
     }
 
+    // PUT /users/{id}
     public function update(Request $request, $id)
     {
         $user = User::find($id);
         if (!$user) {
-            return response()->json(['success' => false, 'message' => 'Data User Tidak Ditemukan!'], 404);
+            return response()->json([
+                'success' => false,
+                'message' => 'User tidak ditemukan'
+            ], 404);
         }
 
         $validator = Validator::make($request->all(), [
-            'username'      => 'required|string|max:50|unique:users,username,' . $user->id,
-            'password'      => 'nullable|string|min:4',
-            'nama_lengkap'  => 'nullable|string|max:100',
-            'peran'         => 'required|in:admin,kasir',
+            'username'     => 'required|string|max:50|unique:users,username,' . $user->id,
+            'email'        => 'required|string|email|unique:users,email,' . $user->id,
+            'password'     => 'nullable|string|min:4',
+            'nama_lengkap' => 'nullable|string|max:100',
+            'peran'        => 'required|in:admin,kasir,user',
+            'total_stamp'  => 'nullable|integer|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -70,23 +98,40 @@ class UserController extends Controller
         }
 
         $user->update([
-            'username' => $request->username,
-            'password' => $request->filled('password') ? Hash::make($request->password) : $user->password,
+            'username'     => $request->username,
+            'email'        => $request->email,
             'nama_lengkap' => $request->nama_lengkap,
-            'peran' => $request->peran,
+            'peran'        => $request->peran,
+            'total_stamp'  => $request->total_stamp ?? $user->total_stamp,
+            'password'     => $request->filled('password')
+                                ? Hash::make($request->password)
+                                : $user->password,
         ]);
 
-        return new UserResourse(true, 'Data User Berhasil Diubah!', $user);
+        return response()->json([
+            'success' => true,
+            'message' => 'User berhasil diupdate!',
+            'data' => $user
+        ]);
     }
 
+    // DELETE /users/{id}
     public function destroy($id)
     {
         $user = User::find($id);
+
         if (!$user) {
-            return response()->json(['success' => false, 'message' => 'Data User Tidak Ditemukan!'], 404);
+            return response()->json([
+                'success' => false,
+                'message' => 'User tidak ditemukan'
+            ], 404);
         }
 
         $user->delete();
-        return new UserResourse(true, 'Data User Berhasil Dihapus!', null);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'User berhasil dihapus'
+        ]);
     }
 }

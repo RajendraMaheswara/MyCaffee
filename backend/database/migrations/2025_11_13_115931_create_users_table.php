@@ -11,9 +11,11 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('username')->unique();
+            $table->string('email')->unique();
             $table->string('password');
             $table->string('nama_lengkap')->nullable();
-            $table->enum('peran', ['admin', 'kasir', 'user']);
+            $table->enum('peran', ['admin', 'kasir', 'user'])->default('user');
+            $table->integer('total_stamp')->default(0);
             $table->timestamps();
         });
     }

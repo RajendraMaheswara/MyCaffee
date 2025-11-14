@@ -7,7 +7,7 @@ export default function MenuList() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.get("menu")
+    api.get("api/menu")
         .then((res) => {
         // console.log("API response:", res.data);
         setMenus(res.data.data.data);

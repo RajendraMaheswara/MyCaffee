@@ -11,8 +11,10 @@ class PesananSeeder extends Seeder
     {
         Pesanan::insert([
             [
-                'id_kasir' => 2,
+                'kasir_id' => 2,
+                'user_id' => null,
                 'nomor_meja' => 5,
+                'jumlah_stamp' => 0,
                 'tanggal_pesan' => '2025-10-27 01:29:25',
                 'total_harga' => 40000.00,
                 'status_pesanan' => 'diproses',
@@ -23,8 +25,10 @@ class PesananSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'id_kasir' => 2,
+                'kasir_id' => 2,
+                'user_id' => null,
                 'nomor_meja' => 10,
+                'jumlah_stamp' => 0,
                 'tanggal_pesan' => '2025-10-27 01:29:25',
                 'total_harga' => 25000.00,
                 'status_pesanan' => 'diantar',
@@ -35,8 +39,10 @@ class PesananSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'id_kasir' => 2,
+                'kasir_id' => 2,
+                'user_id' => null,
                 'nomor_meja' => 3,
+                'jumlah_stamp' => 0,
                 'tanggal_pesan' => '2025-10-27 01:29:25',
                 'total_harga' => 40000.00,
                 'status_pesanan' => 'diproses',

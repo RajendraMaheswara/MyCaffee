@@ -10,13 +10,12 @@ return new class extends Migration
     {
         Schema::create('pesanan', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('id_kasir')
-                ->nullable()
-                ->constrained('users')
-                ->nullOnDelete();
+            $table->foreignId('kasir_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->foreignId('user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->integer('nomor_meja');
+            $table->integer('jumlah_stamp')->default(0);
             $table->dateTime('tanggal_pesan')->useCurrent();
-            $table->decimal('total_harga', 10, 2);
+            $table->decimal('total_harga', 10, 2)->default(0);
             $table->enum('status_pesanan', ['diproses', 'diantar'])->default('diproses');
             $table->enum('status_pembayaran', ['belum_dibayar', 'lunas'])->default('belum_dibayar');
             $table->text('catatan')->nullable();

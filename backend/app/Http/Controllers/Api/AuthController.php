@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 
@@ -13,57 +12,55 @@ class AuthController extends Controller
     public function register(Request $request)
     {
         $request->validate([
-            'username' => 'required|string|unique:users',
-            'password' => 'required|string|min:4',
-            'nama_lengkap' => 'nullable|string',
-            'peran' => 'required|in:admin,kasir,user',
+            'username' => 'required|string|max:50|unique:users',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|min:4|confirmed',
+            'nama_lengkap' => 'nullable|string|max:100',
         ]);
 
         $user = User::create([
             'username' => $request->username,
+            'email' => $request->email,
             'password' => Hash::make($request->password),
             'nama_lengkap' => $request->nama_lengkap,
-            'peran' => $request->peran,
+            'peran' => 'user',
+            'total_stamp' => 0,
         ]);
 
         return response()->json([
-            'success' => true,
             'message' => 'Registrasi berhasil',
-            'data' => $user
-        ]);
+            'user' => $user,
+        ], 201);
     }
 
     public function login(Request $request)
     {
         $request->validate([
-            'username' => 'required|string',
-            'password' => 'required|string',
+            'login'    => 'required',
+            'password' => 'required'
         ]);
 
-        if (!Auth::attempt($request->only('username', 'password'))) {
-            return response()->json(['message' => 'Login gagal'], 401);
+        $user = User::where('username', $request->login)
+            ->orWhere('email', $request->login)
+            ->first();
+
+        if (!$user || !Hash::check($request->password, $user->password)) {
+            return response()->json(['message' => 'Akun tidak ditemukan'], 401);
         }
 
-        $request->session()->regenerate();
+        $token = $user->createToken('api')->plainTextToken;
 
         return response()->json([
-            'success' => true,
-            'message' => 'Login berhasil',
-            'user' => Auth::user()
+            'message' => 'Login sukses',
+            'token' => $token,
+            'user'  => $user
         ]);
     }
 
     public function logout(Request $request)
     {
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
+        $request->user()->currentAccessToken()->delete();
 
         return response()->json(['message' => 'Logout berhasil']);
-    }
-
-    public function user(Request $request)
-    {
-        return response()->json(Auth::user());
     }
 }

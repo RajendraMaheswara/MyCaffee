@@ -9,7 +9,7 @@ export default function MenuDetail() {
 
   useEffect(() => {
     api
-      .get(`menu/${id}`)
+      .get(`/api/menu/${id}`)
       .then((res) => {
         setMenu(res.data.data);
         setLoading(false);

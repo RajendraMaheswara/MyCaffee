@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    // GET /users
     public function index()
     {
         $users = User::latest()->paginate(10);
@@ -22,7 +21,13 @@ class UserController extends Controller
         ]);
     }
 
-    // POST /users (admin menambah user)
+    public function me(Request $request)
+    {
+        return response()->json([
+            'user' => $request->user(),
+        ]);
+    }
+
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -54,7 +59,6 @@ class UserController extends Controller
         ], 201);
     }
 
-    // GET /users/{id}
     public function show($id)
     {
         $user = User::find($id);
@@ -73,7 +77,6 @@ class UserController extends Controller
         ]);
     }
 
-    // PUT /users/{id}
     public function update(Request $request, $id)
     {
         $user = User::find($id);
@@ -114,8 +117,7 @@ class UserController extends Controller
             'data' => $user
         ]);
     }
-
-    // DELETE /users/{id}
+    
     public function destroy($id)
     {
         $user = User::find($id);

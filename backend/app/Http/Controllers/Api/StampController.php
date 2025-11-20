@@ -3,78 +3,77 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\User;
-use App\Models\Menu;
-use App\Models\StampRedeemHistory;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+use App\Models\Pesanan;
+use App\Models\StampRedeemHistory;
 
 class StampController extends Controller
 {
-    public function redeem(Request $request)
+    public function grantStamp(Request $request)
     {
         $request->validate([
-            'menu_id' => 'required|exists:menu,id',
+            'pesanan_id' => 'required|exists:pesanan,id',
         ]);
 
-        // Ambil user login dari Sanctum
-        $user = Auth::user();
+        $pesanan = Pesanan::with('detailPesanan.menu')->find($request->pesanan_id);
 
-        // Validasi benar-benar instance User
-        if (!$user || !($user instanceof User)) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User tidak terautentikasi atau token tidak valid'
-            ], 401);
+        if (!$pesanan->user_id) {
+            return response()->json(['message' => 'Pesanan tidak memiliki user'], 400);
         }
 
-        // Pastikan cukup stamp
-        if ($user->total_stamp < 10) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Stamp tidak cukup!'
-            ], 400);
+        $user = User::find($pesanan->user_id);
+
+        $stamp = 0;
+        foreach ($pesanan->detailPesanan as $d) {
+            if (strtoupper($d->menu->kategori) === 'KOPI') {
+                // 1 stamp per item jika harga >= 25k
+                if ($d->harga_satuan >= 25000) {
+                    $stamp += $d->jumlah;
+                }
+            }
         }
 
-        // Ambil menu
-        $menu = Menu::find($request->menu_id);
+        $user->total_stamp += $stamp;
+        $user->save();
 
-        if (!$menu) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Menu tidak ditemukan'
-            ], 404);
-        }
-
-        if (strtolower($menu->kategori) !== 'kopi') {
-            return response()->json([
-                'success' => false,
-                'message' => 'Menu yang dipilih bukan kategori kopi'
-            ], 400);
-        }
-
-        // Kurangi stamp
-        $user->total_stamp = $user->total_stamp - 10;
-
-        // SIMPAN SECARA PASTI
-        $user->update([
-            'total_stamp' => $user->total_stamp
-        ]);
-
-        // Simpan history
-        $history = StampRedeemHistory::create([
-            'user_id'    => $user->id,
-            'menu_id'    => $menu->id,
-            'stamp_used' => 10,
+        StampRedeemHistory::create([
+            'user_id' => $user->id,
+            'pesanan_id' => $pesanan->id,
+            'jumlah_stamp' => $stamp,
+            'tipe' => 'tambah',
+            'keterangan' => 'Stamp dari pesanan'
         ]);
 
         return response()->json([
-            'success' => true,
-            'message' => 'Redeem berhasil! Kopi gratis: ' . $menu->nama_menu,
-            'data' => [
-                'history' => $history,
-                'sisa_stamp' => $user->total_stamp
-            ]
+            'message' => 'Stamp diberikan',
+            'stamp_didapat' => $stamp,
+            'total_stamp' => $user->total_stamp
+        ]);
+    }
+
+    public function redeemStamp(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user->total_stamp < 10) {
+            return response()->json(['message' => 'Stamp kurang dari 10'], 400);
+        }
+
+        $user->total_stamp -= 10;
+        $user->save();
+
+        StampRedeemHistory::create([
+            'user_id' => $user->id,
+            'pesanan_id' => null,
+            'jumlah_stamp' => 10,
+            'tipe' => 'redeem',
+            'keterangan' => 'Tukar 10 stamp: free coffee'
+        ]);
+
+        return response()->json([
+            'message' => 'Berhasil tukar stamp',
+            'sisa_stamp' => $user->total_stamp
         ]);
     }
 }

@@ -15,6 +15,7 @@ import KasirDashboard from "./pages/kasir/KasirDashboard";
 import MenuList from "./pages/MenuList";
 import MenuDetail from "./pages/MenuDetail";
 import MenuManagement from "./pages/admin/MenuManagement"; // Tambahkan ini
+import UserManagement from "./pages/admin/UserManagement";
 
 function App() {
   return (
@@ -37,6 +38,7 @@ function App() {
           {/* Admin Routes */}
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/menu" element={<MenuManagement />} />
+          <Route path="/admin/users" element={<UserManagement />} />
         </Routes>
     </Router>
   );

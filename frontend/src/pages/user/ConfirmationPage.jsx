@@ -113,7 +113,7 @@ export default function ConfirmationPage() {
               <div>
                 <p className="text-xs sm:text-sm text-gray-600 mb-1">Total Pembayaran</p>
                 <p className="text-base sm:text-lg font-bold text-green-600">
-                  Rp {transaksi.total_harga?.toLocaleString() || '0'}
+                  Rp {transaksi.total_harga ? Math.round(transaksi.total_harga).toLocaleString('id-ID') : '0'}
                 </p>
               </div>
             </div>
@@ -151,13 +151,13 @@ export default function ConfirmationPage() {
                         {item.nama_menu}
                       </h5>
                       <p className="text-xs sm:text-sm text-gray-700 mt-1">
-                        {item.quantity} x Rp {item.harga?.toLocaleString()}
+                        {item.quantity} x Rp {item.harga ? Math.round(item.harga).toLocaleString('id-ID') : '0'}
                       </p>
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="font-bold text-sm sm:text-base text-[#6d503b]">
-                      Rp {(item.harga * item.quantity).toLocaleString()}
+                      Rp {Math.round(item.harga * item.quantity).toLocaleString('id-ID')}
                     </p>
                   </div>
                 </div>
@@ -171,7 +171,7 @@ export default function ConfirmationPage() {
                   Total
                 </span>
                 <span className="text-xl sm:text-2xl font-bold text-green-600">
-                  Rp {transaksi.total_harga?.toLocaleString() || '0'}
+                  Rp {transaksi.total_harga ? Math.round(transaksi.total_harga).toLocaleString('id-ID') : '0'}
                 </span>
               </div>
             </div>

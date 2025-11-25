@@ -64,7 +64,7 @@ export default function CartSidebar() {
                       {item.nama_menu}
                     </h3>
                     <p className="text-xs sm:text-sm text-gray-600 mb-2">
-                      Rp {item.harga.toLocaleString()}
+                      Rp {Math.round(item.harga).toLocaleString('id-ID')}
                     </p>
                     
                     {/* Quantity Controls */}
@@ -109,7 +109,7 @@ export default function CartSidebar() {
             <div className="flex justify-between mb-4 text-base sm:text-lg">
               <span className="font-semibold">Total:</span>
               <span className="font-bold text-[#6d503b] text-lg sm:text-xl">
-                Rp {getTotalPrice().toLocaleString()}
+                Rp {Math.round(getTotalPrice()).toLocaleString('id-ID')}
               </span>
             </div>
             <Link

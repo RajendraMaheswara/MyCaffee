@@ -32,39 +32,35 @@ export default function Navbar() {
 
           {/* Navigation Links */}
           <div className="flex items-center space-x-4">
-            <Link to={getUrlWithTable("/")} className="text-gray-700 hover:text-[#6d503b] font-medium">
+            <Link to={getUrlWithTable("/")} className="text-gray-700 hover:text-[#6d503b] font-medium text-base">
               Menu
             </Link>
 
             {/* Conditional Auth Links */}
             {user ? (
-              <div className="flex items-center space-x-2 sm:space-x-4">
-                <span className="text-gray-700 text-sm hidden sm:block">Halo, {user.username}</span>
+              <div className="flex items-center space-x-4">
                 <Link 
                   to={`/${user.peran}/dashboard`}
-                  className="p-2 text-gray-700 hover:text-[#6d503b]"
-                  title="Dashboard"
+                  className="text-gray-700 hover:text-[#6d503b] font-medium text-base"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z" />
-                  </svg>
+                  Dashboard
                 </Link>
+                {/* Separator */}
+                <div className="h-6 w-px bg-gray-300"></div>
+                <span className="text-gray-700 font-medium text-base">Halo, {user.username}</span>
                 <button 
                   onClick={logout}
-                  className="p-2 text-gray-700 hover:text-[#6d503b]"
-                  title="Logout"
+                  className="text-gray-700 hover:text-[#6d503b] font-medium text-base"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                  </svg>
+                  Logout
                 </button>
               </div>
             ) : (
-              <div className="flex items-center space-x-2 sm:space-x-4">
-                <Link to="/login" className="text-gray-700 hover:text-[#6d503b] font-medium text-sm sm:text-base">
+              <div className="flex items-center space-x-4">
+                <Link to="/login" className="text-gray-700 hover:text-[#6d503b] font-medium text-base">
                   Login
                 </Link>
-                <Link to="/register" className="text-gray-700 hover:text-[#6d503b] font-medium text-sm sm:text-base">
+                <Link to="/register" className="text-gray-700 hover:text-[#6d503b] font-medium text-base">
                   Register
                 </Link>
               </div>

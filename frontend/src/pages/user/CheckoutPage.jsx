@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
+import { AuthContext } from "../../context/AuthProvider";
 import api from "../../api/axios";
 
 export default function CheckoutPage() {
   const { cart, getTotalPrice, clearCart } = useCart();
+  const { user } = useContext(AuthContext);
   const [loading, setLoading] = useState(false);
   const [catatan, setCatatan] = useState("");
   const navigate = useNavigate();
@@ -46,15 +48,42 @@ export default function CheckoutPage() {
         } catch (error) {
           console.error(`Gagal update stok untuk ${item.nama_menu}:`, error);
           alert(`Gagal update stok untuk ${item.nama_menu}`);
+          throw error; // Stop checkout jika update stok gagal
         }
       }
 
-      // Simulasi delay untuk UX
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // Simpan pesanan ke database melalui API
+      const pesananResponse = await api.post('/api/pesanan', {
+        user_id: user?.id || null,
+        nomor_meja: parseInt(nomorMeja),
+        total_harga: getTotalPrice(),
+        status_pesanan: 'diproses',
+        status_pembayaran: 'belum_dibayar',
+        catatan: catatan || null
+      });
 
-      // Simpan data transaksi ke localStorage
+      const pesananId = pesananResponse.data.data.id;
+      console.log('Pesanan berhasil dibuat dengan ID:', pesananId);
+
+      // Simpan detail pesanan (items) ke database
+      for (const item of cart) {
+        try {
+          await api.post('/api/detail-pesanan', {
+            pesanan_id: pesananId,
+            menu_id: item.id,
+            jumlah: item.quantity,
+            harga: item.harga,
+            subtotal: item.harga * item.quantity
+          });
+          console.log(`Detail pesanan untuk ${item.nama_menu} berhasil disimpan`);
+        } catch (error) {
+          console.error(`Gagal simpan detail pesanan untuk ${item.nama_menu}:`, error);
+        }
+      }
+
+      // Simpan data transaksi ke localStorage untuk ditampilkan di confirmation page
       const transaksi = {
-        id: Date.now(),
+        id: pesananId,
         nomor_meja: nomorMeja,
         catatan: catatan,
         items: cart.map(item => ({
@@ -65,14 +94,14 @@ export default function CheckoutPage() {
           gambar: item.gambar
         })),
         total_harga: getTotalPrice(),
-        status_pesanan: 'Menunggu',
+        status_pesanan: 'diproses',
         created_at: new Date().toISOString()
       };
 
       localStorage.setItem('current_transaction', JSON.stringify(transaksi));
       
       clearCart();
-      navigate(`/confirmation/${transaksi.id}?table=${nomorMeja}`);
+      navigate(`/confirmation/${pesananId}?table=${nomorMeja}`);
     } catch (error) {
       console.error("Checkout failed:", error);
       alert("Checkout gagal. Silakan coba lagi.");
@@ -184,13 +213,13 @@ export default function CheckoutPage() {
                         {item.nama_menu}
                       </h3>
                       <p className="text-xs sm:text-sm text-gray-600">
-                        {item.quantity} x Rp {item.harga.toLocaleString()}
+                        {item.quantity} x Rp {Math.round(item.harga).toLocaleString('id-ID')}
                       </p>
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0">
                     <span className="font-bold text-sm sm:text-base text-[#6d503b]">
-                      Rp {(item.quantity * item.harga).toLocaleString()}
+                      Rp {Math.round(item.quantity * item.harga).toLocaleString('id-ID')}
                     </span>
                   </div>
                 </div>
@@ -201,7 +230,7 @@ export default function CheckoutPage() {
             <div className="space-y-2 mb-4 pb-4 border-b border-gray-200">
               <div className="flex justify-between text-sm sm:text-base text-gray-700">
                 <span>Subtotal ({cart.length} item)</span>
-                <span>Rp {getTotalPrice().toLocaleString()}</span>
+                <span>Rp {Math.round(getTotalPrice()).toLocaleString('id-ID')}</span>
               </div>
               <div className="flex justify-between text-sm sm:text-base text-gray-700">
                 <span>Pajak & Biaya Layanan</span>
@@ -215,7 +244,7 @@ export default function CheckoutPage() {
                 Total Pembayaran
               </span>
               <span className="text-xl sm:text-2xl font-bold text-green-600">
-                Rp {getTotalPrice().toLocaleString()}
+                Rp {Math.round(getTotalPrice()).toLocaleString('id-ID')}
               </span>
             </div>
           </div>
@@ -252,7 +281,7 @@ export default function CheckoutPage() {
               Memproses...
             </span>
           ) : (
-            `Konfirmasi Pesanan - Rp ${getTotalPrice().toLocaleString()}`
+            `Konfirmasi Pesanan - Rp ${Math.round(getTotalPrice()).toLocaleString('id-ID')}`
           )}
         </button>
       </div>

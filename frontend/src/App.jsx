@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
+import CartSidebar from "./components/CartSidebar"; // IMPORT BARU
 
 import NotFound from "./pages/NotFound";
 import GuestRoute from "./routes/GuestRoute";
@@ -12,9 +13,12 @@ import UserDashboard from "./pages/user/UserDashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import KasirDashboard from "./pages/kasir/KasirDashboard";
 
-import MenuList from "./pages/MenuList";
-import MenuDetail from "./pages/MenuDetail";
 import MenuManagement from "./pages/admin/MenuManagement"; // Tambahkan ini
+import MenuList from "./pages/user/MenuList";
+import MenuDetail from "./pages/user/MenuDetail";
+import CheckoutPage from "./pages/user/CheckoutPage"; // IMPORT BARU
+import ConfirmationPage from "./pages/user/ConfirmationPage"; // IMPORT BARU
+
 import UserManagement from "./pages/admin/UserManagement";
 
 function App() {
@@ -39,6 +43,8 @@ function App() {
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/menu" element={<MenuManagement />} />
           <Route path="/admin/users" element={<UserManagement />} />
+          <Route path="/checkout" element={<CheckoutPage />} /> {/* RUTE BARU */}
+          <Route path="/confirmation/:id" element={<ConfirmationPage />} /> {/* RUTE BARU */}
         </Routes>
     </Router>
   );

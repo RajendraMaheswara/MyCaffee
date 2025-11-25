@@ -57,7 +57,6 @@ export default function AdminDashboard() {
               </div>
             </div>
           </div>
-
           {/* Manajemen Pengguna Card */}
           <div className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition duration-300 border border-gray-100">
             <div className="flex items-start space-x-4">
@@ -67,12 +66,13 @@ export default function AdminDashboard() {
               <div className="flex-1">
                 <h3 className="text-xl font-serif text-gray-800 mb-2">Manajemen Pengguna</h3>
                 <p className="text-gray-600 mb-4">Kelola data akun admin dan kasir.</p>
-                <button 
+                <Link 
+                  to="/admin/users" 
                   className="inline-block px-6 py-3 rounded-lg font-semibold text-white transition hover:opacity-90"
                   style={{ backgroundColor: '#8B6B47' }}
                 >
                   Kelola Pengguna
-                </button>
+                </Link>
               </div>
             </div>
           </div>

@@ -19,6 +19,8 @@ import MenuDetail from "./pages/user/MenuDetail";
 import CheckoutPage from "./pages/user/CheckoutPage"; // IMPORT BARU
 import ConfirmationPage from "./pages/user/ConfirmationPage"; // IMPORT BARU
 
+import UserManagement from "./pages/admin/UserManagement";
+
 function App() {
   return (
     <Router>
@@ -40,6 +42,7 @@ function App() {
           {/* Admin Routes */}
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/menu" element={<MenuManagement />} />
+          <Route path="/admin/users" element={<UserManagement />} />
           <Route path="/checkout" element={<CheckoutPage />} /> {/* RUTE BARU */}
           <Route path="/confirmation/:id" element={<ConfirmationPage />} /> {/* RUTE BARU */}
         </Routes>

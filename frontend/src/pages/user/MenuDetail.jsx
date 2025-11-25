@@ -115,7 +115,7 @@ export default function MenuDetail() {
           <div className="mb-6 sm:mb-8 pb-6 border-b border-gray-200">
             <div className="flex items-baseline justify-between mb-3">
               <span className="text-2xl sm:text-3xl font-bold text-[#6d503b]">
-                Rp {menu.harga?.toLocaleString() || '0'}
+                Rp {menu.harga ? Math.round(menu.harga).toLocaleString('id-ID') : '0'}
               </span>
               <span className={`text-sm sm:text-base font-semibold px-3 py-1 rounded-full ${
                 menu.stok > 0 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
@@ -171,7 +171,7 @@ export default function MenuDetail() {
                 <>
                   <span className="block sm:inline">Tambah ke Keranjang</span>
                   <span className="block sm:inline sm:ml-2 text-sm sm:text-base">
-                    - Rp {(menu.harga * quantity).toLocaleString()}
+                    - Rp {Math.round(menu.harga * quantity).toLocaleString('id-ID')}
                   </span>
                 </>
               ) : (

@@ -258,7 +258,7 @@ export default function MenuList() {
                   {/* Price & Stock */}
                   <div className="flex justify-between items-center mb-2 sm:mb-3">
                     <span className="font-bold text-sm sm:text-base md:text-lg text-[#6d503b]">
-                      Rp {menu.harga ? menu.harga.toLocaleString() : '0'}
+                      Rp {menu.harga ? Math.round(menu.harga).toLocaleString('id-ID') : '0'}
                     </span>
                     <span className={`text-[10px] sm:text-xs font-medium px-1.5 py-0.5 rounded ${
                       (menu.stok > 0) ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
@@ -269,64 +269,66 @@ export default function MenuList() {
 
                   {/* Buttons */}
                   <div className="space-y-2">
-                    {(() => {
-                      const cartItem = getCartItem(menu.id);
-                      if (!cartItem) {
-                        // Belum ada di keranjang
+                    <div className="min-h-[52px] flex">
+                      {(() => {
+                        const cartItem = getCartItem(menu.id);
+                        if (!cartItem) {
+                          // Belum ada di keranjang
+                          return (
+                            <button
+                              onClick={() => handleAddToCart(menu)}
+                              disabled={menu.stok <= 0}
+                              className={`flex items-center justify-center w-full py-2.5 sm:py-3 px-3 sm:px-4 rounded-md sm:rounded-lg font-medium text-sm sm:text-base transition-colors ${
+                                menu.stok > 0
+                                  ? 'bg-white border-2 border-[#6d503b] text-[#6d503b] hover:bg-[#6d503b] hover:text-white active:bg-[#5c4033]'
+                                  : 'bg-gray-100 border-2 border-gray-300 text-gray-400 cursor-not-allowed'
+                              }`}
+                            >
+                              + Keranjang
+                            </button>
+                          );
+                        }
+                        // Sudah ada di keranjang -> tampilkan kontrol jumlah
                         return (
-                          <button
-                            onClick={() => handleAddToCart(menu)}
-                            disabled={menu.stok <= 0}
-                            className={`block w-full py-1.5 sm:py-2 px-3 sm:px-4 rounded-md sm:rounded-lg font-medium text-xs sm:text-sm transition-colors ${
-                              menu.stok > 0
-                                ? 'bg-white border-2 border-[#6d503b] text-[#6d503b] hover:bg-[#6d503b] hover:text-white active:bg-[#5c4033]'
-                                : 'bg-gray-100 border-2 border-gray-300 text-gray-400 cursor-not-allowed'
-                            }`}
-                          >
-                            + Keranjang
-                          </button>
+                          <div className="flex items-center justify-center gap-2 bg-white border-2 border-[#6d503b] rounded-md sm:rounded-lg px-3 sm:px-4 py-2.5 sm:py-3 w-full">
+                            <button
+                              onClick={() => {
+                                const newQty = cartItem.quantity - 1;
+                                if (newQty <= 0) {
+                                  removeFromCart(cartItem.id);
+                                } else {
+                                  updateQuantity(cartItem.id, newQty);
+                                }
+                              }}
+                              className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded bg-gray-100 hover:bg-[#6d503b] hover:text-white text-[#6d503b] transition text-lg sm:text-xl font-bold"
+                            >
+                              −
+                            </button>
+                            <span className="font-bold text-[#6d503b] text-base sm:text-lg min-w-[30px] text-center">
+                              {cartItem.quantity}
+                            </span>
+                            <button
+                              onClick={() => {
+                                if (cartItem.quantity < menu.stok) {
+                                  updateQuantity(cartItem.id, cartItem.quantity + 1);
+                                }
+                              }}
+                              disabled={cartItem.quantity >= menu.stok}
+                              className={`flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded transition text-lg sm:text-xl font-bold ${
+                                cartItem.quantity < menu.stok
+                                  ? 'bg-gray-100 hover:bg-[#6d503b] hover:text-white text-[#6d503b]'
+                                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                              }`}
+                            >
+                              +
+                            </button>
+                          </div>
                         );
-                      }
-                      // Sudah ada di keranjang -> tampilkan kontrol jumlah
-                      return (
-                        <div className="flex items-center justify-between bg-white border-2 border-[#6d503b] rounded-md sm:rounded-lg px-2 sm:px-3 py-1.5 sm:py-2">
-                          <button
-                            onClick={() => {
-                              const newQty = cartItem.quantity - 1;
-                              if (newQty <= 0) {
-                                removeFromCart(cartItem.id);
-                              } else {
-                                updateQuantity(cartItem.id, newQty);
-                              }
-                            }}
-                            className="w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full border border-[#6d503b] text-[#6d503b] hover:bg-[#6d503b] hover:text-white transition text-xs sm:text-sm"
-                          >
-                            -
-                          </button>
-                          <span className="font-semibold text-[#6d503b] text-xs sm:text-sm">
-                            {cartItem.quantity}
-                          </span>
-                          <button
-                            onClick={() => {
-                              if (cartItem.quantity < menu.stok) {
-                                updateQuantity(cartItem.id, cartItem.quantity + 1);
-                              }
-                            }}
-                            disabled={cartItem.quantity >= menu.stok}
-                            className={`w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center rounded-full border border-[#6d503b] transition text-xs sm:text-sm ${
-                              cartItem.quantity < menu.stok
-                                ? 'text-[#6d503b] hover:bg-[#6d503b] hover:text-white'
-                                : 'text-gray-400 border-gray-300 cursor-not-allowed'
-                            }`}
-                          >
-                            +
-                          </button>
-                        </div>
-                      );
-                    })()}
+                      })()}
+                    </div>
                     <Link
                       to={`/menu/${menu.id}${window.location.search}`}
-                      className="block w-full bg-[#6d503b] text-white text-center py-1.5 sm:py-2 px-3 sm:px-4 rounded-md sm:rounded-lg hover:bg-[#5c4033] active:bg-[#4a3329] transition-colors font-medium text-xs sm:text-sm"
+                      className="flex items-center justify-center w-full bg-[#6d503b] text-white py-2.5 sm:py-3 px-3 sm:px-4 rounded-md sm:rounded-lg hover:bg-[#5c4033] active:bg-[#4a3329] transition-colors font-medium text-sm sm:text-base"
                     >
                       Detail
                     </Link>
@@ -342,7 +344,7 @@ export default function MenuList() {
       {cart.length > 0 && (
         <div className="fixed bottom-0 left-0 right-0 bg-[#6d503b] text-white shadow-2xl px-4 py-3 flex items-center justify-between z-30">
           <div className="text-sm sm:text-base font-semibold">
-            Total: Rp {getTotalPrice().toLocaleString()}
+            Total: Rp {Math.round(getTotalPrice()).toLocaleString('id-ID')}
           </div>
           <button
             onClick={openCart}

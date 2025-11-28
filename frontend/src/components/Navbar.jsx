@@ -32,9 +32,12 @@ export default function Navbar() {
 
           {/* Navigation Links */}
           <div className="flex items-center space-x-4">
-            <Link to={getUrlWithTable("/")} className="text-gray-700 hover:text-[#6d503b] font-medium text-base">
-              Menu
-            </Link>
+            {/* Show "Menu" link only if the user is not an admin or kasir */}
+            {!user || (user.peran !== 'admin' && user.peran !== 'kasir') ? (
+              <Link to={getUrlWithTable("/")} className="text-gray-700 hover:text-[#6d503b] font-medium text-base">
+                Menu
+              </Link>
+            ) : null}
 
             {/* Conditional Auth Links */}
             {user ? (

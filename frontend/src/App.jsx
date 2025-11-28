@@ -20,8 +20,11 @@ import CheckoutPage from "./pages/user/CheckoutPage"; // IMPORT BARU
 import ConfirmationPage from "./pages/user/ConfirmationPage"; // IMPORT BARU
 
 import UserManagement from "./pages/admin/UserManagement";
+import { useContext } from "react";
+import { AuthContext } from "./context/AuthProvider";
 
 function App() {
+  const { user } = useContext(AuthContext);
   return (
     <Router>
       <Navbar />
@@ -38,7 +41,12 @@ function App() {
           <Route path="/kasir/dashboard" element={ <RoleRoute  roles={['kasir']}> <KasirDashboard /> </RoleRoute >}/>
           <Route path="/user/dashboard" element={ <RoleRoute  roles={['user']}> <UserDashboard /> </RoleRoute >}/>
 
-          <Route path="/" element={<MenuList />} />
+          {/* Admin and Kasir cannot access the / route */}
+          <Route path="/" element={
+            user && (user.peran === 'admin' || user.peran === 'kasir') 
+            ? <Navigate to={`/${user.peran}/dashboard`} /> 
+            : <MenuList /> 
+          } />
           <Route path="/menu/:id" element={<MenuDetail />} />
           {/* Admin Routes */}
           <Route path="/admin/dashboard" element={<AdminDashboard />} />

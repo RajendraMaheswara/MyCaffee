@@ -35,6 +35,7 @@ class UserController extends Controller
             'email'        => 'required|string|email|unique:users,email',
             'password'     => 'required|string|min:4',
             'nama_lengkap' => 'nullable|string|max:100',
+            'no_telp' => 'nullable|regex:/^[0-9]{10,15}$/',
             'peran'        => 'required|in:admin,kasir,user',
             'total_stamp'  => 'nullable|integer|min:0',
         ]);
@@ -48,6 +49,7 @@ class UserController extends Controller
             'email'        => $request->email,
             'password'     => Hash::make($request->password),
             'nama_lengkap' => $request->nama_lengkap,
+            'no_telp'      => $request->no_telp,
             'peran'        => $request->peran,
             'total_stamp'  => $request->total_stamp ?? 0,
         ]);
@@ -80,6 +82,7 @@ class UserController extends Controller
     public function update(Request $request, $id)
     {
         $user = User::find($id);
+
         if (!$user) {
             return response()->json([
                 'success' => false,
@@ -92,6 +95,7 @@ class UserController extends Controller
             'email'        => 'required|string|email|unique:users,email,' . $user->id,
             'password'     => 'nullable|string|min:4',
             'nama_lengkap' => 'nullable|string|max:100',
+            'no_telp' => 'nullable|string|regex:/^[0-9]{10,15}$/|unique:users,no_telp,' . $user->id,
             'peran'        => 'required|in:admin,kasir,user',
             'total_stamp'  => 'nullable|integer|min:0',
         ]);
@@ -104,11 +108,12 @@ class UserController extends Controller
             'username'     => $request->username,
             'email'        => $request->email,
             'nama_lengkap' => $request->nama_lengkap,
+            'no_telp'      => $request->no_telp,
             'peran'        => $request->peran,
             'total_stamp'  => $request->total_stamp ?? $user->total_stamp,
-            'password'     => $request->filled('password')
-                                ? Hash::make($request->password)
-                                : $user->password,
+            'password'     => $request->filled('password') 
+                            ? Hash::make($request->password) 
+                            : $user->password,
         ]);
 
         return response()->json([

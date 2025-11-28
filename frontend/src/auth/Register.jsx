@@ -11,6 +11,7 @@ export default function Register() {
         password: "",
         password_confirmation: "",
         nama_lengkap: "",
+        no_telp: "",
     });
 
     const [errors, setErrors] = useState({});
@@ -80,6 +81,14 @@ export default function Register() {
             case "nama_lengkap":
                 if (value && value.length > 100) {
                     error = "Nama lengkap maksimal 100 karakter";
+                }
+                break;
+            
+            case "no_telp":
+                if (!value) {
+                    error = "Nomor telepon wajib diisi";
+                } else if (!/^[0-9]{10,12}$/.test(value)) {
+                    error = "Nomor telepon tidak valid";
                 }
                 break;
         }
@@ -207,6 +216,27 @@ export default function Register() {
                             />
                             {errors.email && (
                                 <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                            )}
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                                Nomor Telp <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                                type="text"
+                                name="no_telp"
+                                value={formData.no_telp}
+                                onChange={handleChange}
+                                onBlur={handleBlur}
+                                required
+                                className={`w-full px-4 py-3 border rounded-lg transition
+                                           focus:ring-2 focus:ring-[#8B6B47] focus:border-transparent
+                                           ${errors.no_telp ? 'border-red-500' : 'border-gray-300'}`}
+                                placeholder="Masukkan nomor telepon"
+                            />
+                            {errors.no_telp  && (
+                                <p className="text-red-500 text-sm mt-1">{errors.no_telp }</p>
                             )}
                         </div>
 

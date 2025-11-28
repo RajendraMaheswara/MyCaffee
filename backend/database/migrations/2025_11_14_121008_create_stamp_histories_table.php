@@ -9,14 +9,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('stamp_histories', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('pesanan_id')->nullable()->constrained('pesanan')->nullOnDelete();
-            $table->integer('jumlah_stamp');
-            $table->enum('tipe', ['earn', 'redeem'])->default('earn');
-            $table->string('keterangan')->nullable();
-            $table->timestamps();
-        });
+        $table->id();
+        $table->bigInteger('user_id')->unsigned();
+        $table->bigInteger('pesanan_id')->unsigned()->nullable();
+        $table->integer('jumlah_stamp');
+        $table->enum('tipe', ['earn', 'redeem']);
+        $table->string('keterangan')->nullable();
+        $table->timestamps();
+
+        $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
+        $table->foreign('pesanan_id')->references('id')->on('pesanan')->onDelete('set null');
+    });
     }
 
     public function down(): void

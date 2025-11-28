@@ -14,6 +14,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('password');
             $table->string('nama_lengkap')->nullable();
+            $table->string('no_telp', 15)->nullable();
             $table->enum('peran', ['admin', 'kasir', 'user'])->default('user');
             $table->integer('total_stamp')->default(0);
             $table->timestamps();

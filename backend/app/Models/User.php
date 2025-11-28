@@ -17,6 +17,7 @@ class User extends Authenticatable
         'email',
         'password',
         'nama_lengkap',
+        'no_telp',
         'peran',
         'total_stamp',
     ];
@@ -38,10 +39,5 @@ class User extends Authenticatable
     public function stampHistories()
     {
         return $this->hasMany(StampHistory::class);
-    }
-
-    public function redeemHistories()
-    {
-        return $this->hasMany(StampRedeemHistory::class);
     }
 }

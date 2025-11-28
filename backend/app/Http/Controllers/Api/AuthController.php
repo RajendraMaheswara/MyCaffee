@@ -16,6 +16,7 @@ class AuthController extends Controller
             'email' => 'required|email|unique:users',
             'password' => 'required|min:4|confirmed',
             'nama_lengkap' => 'nullable|string|max:100',
+            'no_telp' => 'nullable|string|regex:/^[0-9]{10,15}$/|unique:users,no_telp'
         ]);
 
         $user = User::create([
@@ -23,6 +24,7 @@ class AuthController extends Controller
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'nama_lengkap' => $request->nama_lengkap,
+            'no_telp'      => $request->no_telp,
             'peran' => 'user',
             'total_stamp' => 0,
         ]);

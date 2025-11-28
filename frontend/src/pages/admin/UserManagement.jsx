@@ -108,6 +108,7 @@ const UserManagement = () => {
                         <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Username</th>
                         <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Email</th>
                         <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nama Lengkap</th>
+                        <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Nomor Telp</th>
                         <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Peran</th>
                         <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total Stamp</th>
                         <th className="px-6 py-4 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
@@ -126,6 +127,7 @@ const UserManagement = () => {
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                               {user.nama_lengkap || '-'}
                             </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{user.no_telp}</td>
                             <td className="px-6 py-4 whitespace-nowrap">
                               <span 
                                 className="px-3 py-1 rounded-full text-xs font-medium text-white capitalize"
@@ -217,6 +219,7 @@ const UserForm = ({ user, onClose, onSuccess }) => {
     email: '',
     password: '',
     nama_lengkap: '',
+    no_telp: '',
     peran: 'user',
     total_stamp: 0
   });
@@ -230,6 +233,7 @@ const UserForm = ({ user, onClose, onSuccess }) => {
         email: user.email || '',
         password: '', // Kosongkan password saat edit
         nama_lengkap: user.nama_lengkap || '',
+        no_telp: user.no_telp || '',
         peran: user.peran || 'user',
         total_stamp: user.total_stamp || 0
       });
@@ -364,6 +368,18 @@ const UserForm = ({ user, onClose, onSuccess }) => {
               <option value="user">User</option>
             </select>
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Nomor Telp</label>
+            <input
+                type="text"
+                value={formData.no_telp}
+                onChange={(e) => setFormData({...formData, no_telp: e.target.value})}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent"
+                style={{ '--tw-ring-color': '#5C4033' }}
+                placeholder="Masukkan nomor telepon"
+            />
+        </div>
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">Total Stamp</label>

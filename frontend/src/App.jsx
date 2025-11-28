@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate  } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import CartSidebar from "./components/CartSidebar"; // IMPORT BARU
 
@@ -25,6 +25,7 @@ function App() {
   return (
     <Router>
       <Navbar />
+      <CartSidebar />
         <Routes>
           <Route path="/not-found" element={<NotFound />} />
           <Route path="*" element={<NotFound />} />

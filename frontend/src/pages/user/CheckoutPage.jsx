@@ -72,8 +72,8 @@ export default function CheckoutPage() {
             pesanan_id: pesananId,
             menu_id: item.id,
             jumlah: item.quantity,
-            harga: item.harga,
-            subtotal: item.harga * item.quantity
+            harga_satuan: parseFloat(item.harga),
+            subtotal: parseFloat(item.harga) * item.quantity
           });
           console.log(`Detail pesanan untuk ${item.nama_menu} berhasil disimpan`);
         } catch (error) {
@@ -90,7 +90,7 @@ export default function CheckoutPage() {
           id_menu: item.id,
           nama_menu: item.nama_menu,
           quantity: item.quantity,
-          harga: item.harga,
+          harga_satuan: parseFloat(item.harga),
           gambar: item.gambar
         })),
         total_harga: getTotalPrice(),

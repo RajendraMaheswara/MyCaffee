@@ -19,10 +19,11 @@ class DetailPesananController extends Controller
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'id_pesanan' => 'required|exists:pesanan,id',
-            'id_menu' => 'required|exists:menu,id',
+            'pesanan_id' => 'required|exists:pesanan,id',
+            'menu_id' => 'required|exists:menu,id',
             'jumlah' => 'required|integer|min:1',
             'harga_satuan' => 'required|numeric|min:0',
+            'subtotal' => 'required|numeric|min:0',
         ]);
 
         if ($validator->fails()) {
@@ -53,6 +54,7 @@ class DetailPesananController extends Controller
         $validator = Validator::make($request->all(), [
             'jumlah' => 'required|integer|min:1',
             'harga_satuan' => 'required|numeric|min:0',
+            'subtotal' => 'required|numeric|min:0',
         ]);
 
         if ($validator->fails()) {

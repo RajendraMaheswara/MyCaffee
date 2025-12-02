@@ -14,6 +14,7 @@ return new class extends Migration
             $table->foreignId('menu_id')->constrained('menu')->cascadeOnDelete();
             $table->integer('jumlah');
             $table->decimal('harga_satuan', 10, 2);
+            $table->decimal('subtotal', 10, 2);
             $table->timestamps();
         });
     }

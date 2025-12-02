@@ -48,6 +48,7 @@ function App() {
             : <MenuList /> 
           } />
           <Route path="/menu/:id" element={<MenuDetail />} />
+          
           {/* Admin Routes */}
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/menu" element={<MenuManagement />} />

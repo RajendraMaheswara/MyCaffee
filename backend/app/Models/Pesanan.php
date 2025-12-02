@@ -40,23 +40,10 @@ class Pesanan extends Model
     {
         $stamp = 0;
         foreach ($this->detailPesanan as $detail) {
-            // Tambahkan stempel jika harga per item >= 25k
             if ($detail->harga_satuan >= 25000) {
                 $stamp += $detail->jumlah;
             }
         }
         return $stamp;
     }
-
-    // Pastikan stempel terupdate ketika pembayaran berhasil
-    public function updateStampAfterPayment()
-    {
-        $this->jumlah_stamp = $this->hitungStamp();
-        $this->save();
-        
-        if ($this->user_id) {
-            $this->user->increment('total_stamp', $this->jumlah_stamp);
-        }
-    }
-
 }

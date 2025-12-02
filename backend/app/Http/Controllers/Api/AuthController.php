@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -42,13 +44,44 @@ class AuthController extends Controller
             'password' => 'required'
         ]);
 
-        $user = User::where('username', $request->login)
-            ->orWhere('email', $request->login)
+        $login = (string) $request->input('login');
+        $ip = $request->ip();
+        $key = Str::lower($login) . '|' . $ip;
+
+        $maxAttempts = 5;
+        $decayMinutes = 15; // lockout duration in minutes
+
+        if (RateLimiter::tooManyAttempts($key, $maxAttempts)) {
+            $seconds = RateLimiter::availableIn($key);
+            return response()->json([
+                'message' => 'Terlalu banyak percobaan login. Coba lagi dalam '. $seconds . ' detik.'
+            ], 429);
+        }
+
+        $user = User::where('username', $login)
+            ->orWhere('email', $login)
             ->first();
 
         if (!$user || !Hash::check($request->password, $user->password)) {
-            return response()->json(['message' => 'Akun tidak ditemukan'], 401);
+            RateLimiter::hit($key, $decayMinutes * 60);
+
+            $attempts = RateLimiter::attempts($key);
+            if ($attempts >= $maxAttempts) {
+                $seconds = RateLimiter::availableIn($key);
+                return response()->json([
+                    'message' => 'Kata sandi salah sebanyak '.$maxAttempts.' kali. Akun dikunci sementara. Coba lagi dalam '. $seconds .' detik.'
+                ], 429);
+            }
+
+            $remaining = $maxAttempts - $attempts;
+            return response()->json([
+                'message' => 'Akun tidak ditemukan atau kata sandi salah',
+                'remaining_attempts' => $remaining
+            ], 401);
         }
+
+        // successful login -> clear attempts
+        RateLimiter::clear($key);
 
         $token = $user->createToken('api')->plainTextToken;
 
@@ -64,5 +97,30 @@ class AuthController extends Controller
         $request->user()->currentAccessToken()->delete();
 
         return response()->json(['message' => 'Logout berhasil']);
+    }
+
+    // GET /api/login-attempts?login=...
+    public function loginAttempts(Request $request)
+    {
+        $request->validate([
+            'login' => 'required'
+        ]);
+
+        $login = (string) $request->input('login');
+        $ip = $request->ip();
+        $key = Str::lower($login) . '|' . $ip;
+
+        $maxAttempts = 5;
+        $decayMinutes = 15;
+
+        $attempts = RateLimiter::attempts($key);
+        $locked = RateLimiter::tooManyAttempts($key, $maxAttempts);
+        $availableIn = $locked ? RateLimiter::availableIn($key) : 0;
+
+        return response()->json([
+            'remaining_attempts' => max(0, $maxAttempts - $attempts),
+            'locked' => $locked,
+            'available_in_seconds' => $availableIn
+        ]);
     }
 }

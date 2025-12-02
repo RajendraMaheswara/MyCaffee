@@ -1,5 +1,6 @@
 import { useContext, useState, useEffect } from "react";
 import { AuthContext } from "../context/AuthProvider";
+import api from "../api/axios";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 
 export default function Login() {
@@ -13,6 +14,8 @@ export default function Login() {
     });
 
     const [successMessage, setSuccessMessage] = useState("");
+    const [remainingAttempts, setRemainingAttempts] = useState(null);
+    const [lockoutMessage, setLockoutMessage] = useState("");
 
     useEffect(() => {
         if (location.state?.message) {
@@ -28,10 +31,46 @@ export default function Login() {
         }
     }, [location]);
 
+    // Poll remaining attempts while the login input is filled
+    useEffect(() => {
+        let interval = null;
+
+        const fetchAttempts = async () => {
+            if (!form.login) return;
+            try {
+                const res = await api.get('/api/login-attempts', { params: { login: form.login } });
+                const data = res.data;
+                if (data.locked) {
+                    setLockoutMessage(`Kata sandi salah sebanyak 5 kali. Akun dikunci sementara. Coba lagi dalam ${data.available_in_seconds} detik.`);
+                    setRemainingAttempts(0);
+                } else {
+                    setRemainingAttempts(data.remaining_attempts);
+                    setLockoutMessage("");
+                }
+            } catch (e) {
+                // ignore network errors silently
+            }
+        };
+
+        // fetch immediately and then every 5 seconds
+        if (form.login) {
+            fetchAttempts();
+            interval = setInterval(fetchAttempts, 5000);
+        }
+
+        return () => {
+            if (interval) clearInterval(interval);
+        };
+    }, [form.login]);
+
     const onSubmit = async (e) => {
         e.preventDefault();
         try {
             const user = await login(form);
+
+            // clear attempt info on success
+            setRemainingAttempts(null);
+            setLockoutMessage("");
 
             if (user.peran === "admin") {
                 navigate("/admin/dashboard");
@@ -41,7 +80,20 @@ export default function Login() {
                 navigate("/");
             }
         } catch (err) {
-            alert("Login gagal. Periksa username/email dan password Anda.");
+            // handle API provided remaining attempts or lockout message
+            const resp = err?.response;
+            if (resp && resp.data) {
+                if (resp.status === 429) {
+                    setLockoutMessage(resp.data.message || "Akun terkunci sementara.");
+                    setRemainingAttempts(0);
+                } else if (typeof resp.data.remaining_attempts !== 'undefined') {
+                    setRemainingAttempts(resp.data.remaining_attempts);
+                    setLockoutMessage("");
+                }
+            }
+
+            // fallback generic alert
+            if (!resp) alert("Login gagal. Periksa koneksi Anda.");
         }
     };
 
@@ -113,6 +165,12 @@ export default function Login() {
                                            transition"
                                 placeholder="Masukkan password"
                             />
+                            {/* Remaining attempts / lockout message (moved below password) */}
+                            {lockoutMessage ? (
+                                <p className="mt-2 text-sm text-red-700">{lockoutMessage}</p>
+                            ) : remainingAttempts !== null ? (
+                                <p className="mt-2 text-sm text-yellow-700">Sisa percobaan login: {remainingAttempts}</p>
+                            ) : null}
                         </div>
 
                         <button

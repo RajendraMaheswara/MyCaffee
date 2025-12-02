@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\StampController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login',    [AuthController::class, 'login']);
+Route::get('/login-attempts', [AuthController::class, 'loginAttempts']);
 
 Route::middleware('auth:sanctum')->group(function () {
 

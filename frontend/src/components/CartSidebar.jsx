@@ -1,3 +1,4 @@
+// components/CartSidebar.jsx
 import { useCart } from "../context/CartContext";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";

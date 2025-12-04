@@ -12,13 +12,16 @@ class Pesanan extends Model
         'kasir_id',
         'user_id',
         'nomor_meja',
-        'jumlah_stamp',
+        'earned_stamp',
+        'redeem_stamp',
+        'redeem_stamp_amount',
+        'redeem_value',
         'tanggal_pesan',
+        'tanggal_pembayaran',
         'total_harga',
         'status_pesanan',
         'status_pembayaran',
-        'catatan',
-        'tanggal_pembayaran',
+        'catatan'
     ];
 
     public function kasir()
@@ -36,14 +39,8 @@ class Pesanan extends Model
         return $this->hasMany(DetailPesanan::class, 'pesanan_id', 'id');
     }
 
-    public function hitungStamp()
+    public function stamps()
     {
-        $stamp = 0;
-        foreach ($this->detailPesanan as $detail) {
-            if ($detail->harga_satuan >= 25000) {
-                $stamp += $detail->jumlah;
-            }
-        }
-        return $stamp;
+        return $this->hasMany(\App\Models\Stamp::class, 'pesanan_id');
     }
 }

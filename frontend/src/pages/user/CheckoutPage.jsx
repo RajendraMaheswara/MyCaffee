@@ -1,3 +1,4 @@
+// pages/CheckoutPage.jsx
 import { useState, useEffect, useContext } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useCart } from "../../context/CartContext";
@@ -14,6 +15,14 @@ export default function CheckoutPage() {
   
   const nomorMeja = searchParams.get('table');
 
+  // Stamp states
+  const [useStamp, setUseStamp] = useState(false);
+  const [stampAmount, setStampAmount] = useState(0);
+  const [redeemLoading, setRedeemLoading] = useState(false);
+
+  // Final total after redeem (initial = subtotal)
+  const [finalTotal, setFinalTotal] = useState(() => getTotalPrice());
+
   useEffect(() => {
     if (!nomorMeja) {
       alert("Nomor meja tidak ditemukan. Silakan scan QR Code meja Anda.");
@@ -21,11 +30,30 @@ export default function CheckoutPage() {
     }
   }, [nomorMeja, navigate]);
 
+  // Recompute final total when cart changes and no redeem applied
+  useEffect(() => {
+    setFinalTotal(getTotalPrice());
+  }, [cart]);
+
+  // helper: compute kopi total value and qty (case-insensitive kategori)
+  const computeKopiTotals = () => {
+    let value = 0;
+    let qty = 0;
+    for (const item of cart) {
+      const kategori = (item.kategori || "").toString().toLowerCase();
+      if (kategori === "kopi") {
+        value += item.harga * item.quantity;
+        qty += item.quantity;
+      }
+    }
+    return { value, qty };
+  };
+
   const handleCheckout = async () => {
     setLoading(true);
     
     try {
-      // Update stok di backend untuk setiap item
+      // 1) Update stok di backend untuk setiap item (keep this existing behavior)
       for (const item of cart) {
         try {
           // Ambil data menu terbaru untuk mendapatkan stok saat ini
@@ -44,7 +72,6 @@ export default function CheckoutPage() {
             kategori: currentMenu.kategori
           });
           
-          console.log(`Stok ${item.nama_menu} berhasil diupdate: ${currentMenu.stok} -> ${newStok}`);
         } catch (error) {
           console.error(`Gagal update stok untuk ${item.nama_menu}:`, error);
           alert(`Gagal update stok untuk ${item.nama_menu}`);
@@ -52,7 +79,7 @@ export default function CheckoutPage() {
         }
       }
 
-      // Simpan pesanan ke database melalui API
+      // 2) Buat pesanan (initial total = subtotal)
       const pesananResponse = await api.post('/api/pesanan', {
         user_id: user?.id || null,
         nomor_meja: parseInt(nomorMeja),
@@ -63,9 +90,8 @@ export default function CheckoutPage() {
       });
 
       const pesananId = pesananResponse.data.data.id;
-      console.log('Pesanan berhasil dibuat dengan ID:', pesananId);
 
-      // Simpan detail pesanan (items) ke database
+      // 3) Simpan detail pesanan (items) ke database -> harus dilakukan sebelum redeem
       for (const item of cart) {
         try {
           await api.post('/api/detail-pesanan', {
@@ -75,13 +101,52 @@ export default function CheckoutPage() {
             harga_satuan: parseFloat(item.harga),
             subtotal: parseFloat(item.harga) * item.quantity
           });
-          console.log(`Detail pesanan untuk ${item.nama_menu} berhasil disimpan`);
         } catch (error) {
           console.error(`Gagal simpan detail pesanan untuk ${item.nama_menu}:`, error);
         }
       }
 
-      // Simpan data transaksi ke localStorage untuk ditampilkan di confirmation page
+      // 4) Jika user memilih pakai stamp -> panggil endpoint redeem
+      let finalPesanan = null;
+      if (useStamp && user && stampAmount > 0) {
+        try {
+          setRedeemLoading(true);
+
+          // call redeem endpoint (server akan validasi kelipatan/dibatasi)
+          const redeemRes = await api.post(`/api/pesanan/${pesananId}/redeem-stamp`, {
+            stamp_amount: stampAmount
+          });
+
+          // server returns updated pesanan in `pesanan`
+          finalPesanan = redeemRes.data.pesanan ?? redeemRes.data.data?.pesanan ?? null;
+          if (!finalPesanan) {
+            // fallback: refetch pesanan
+            const ref = await api.get(`/api/pesanan/${pesananId}`);
+            finalPesanan = ref.data.data;
+          }
+        } catch (err) {
+          // redeem gagal — beritahu user tapi lanjutkan (pesanan tetap tersimpan tanpa redeem)
+          const msg = err?.response?.data?.message || "Gagal menggunakan stamp. Pesanan dibuat tanpa redeem.";
+          alert(msg);
+          finalPesanan = null;
+        } finally {
+          setRedeemLoading(false);
+        }
+      }
+
+      // 5) Ambil pesanan akhir untuk disimpan ke localStorage (jika redeem sukses, gunakan data finalPesanan)
+      let pesananData = null;
+      if (finalPesanan) {
+        pesananData = finalPesanan;
+        setFinalTotal(parseFloat(finalPesanan.total_harga || getTotalPrice()));
+      } else {
+        // fetch current pesanan from server
+        const fetchRes = await api.get(`/api/pesanan/${pesananId}`);
+        pesananData = fetchRes.data.data;
+        setFinalTotal(parseFloat(pesananData.total_harga || getTotalPrice()));
+      }
+
+      // 6) Simpan transaksi lokal untuk confirmation page
       const transaksi = {
         id: pesananId,
         nomor_meja: nomorMeja,
@@ -90,16 +155,21 @@ export default function CheckoutPage() {
           id_menu: item.id,
           nama_menu: item.nama_menu,
           quantity: item.quantity,
-          harga_satuan: parseFloat(item.harga),
-          gambar: item.gambar
+          harga: parseFloat(item.harga),
+          gambar: item.gambar,
+          kategori: item.kategori
         })),
-        total_harga: getTotalPrice(),
-        status_pesanan: 'diproses',
+        total_harga: parseFloat(pesananData.total_harga || getTotalPrice()),
+        redeem_stamp: pesananData.redeem_stamp ?? false,
+        redeem_stamp_amount: pesananData.redeem_stamp_amount ?? 0,
+        redeem_value: pesananData.redeem_value ?? 0,
+        status_pesanan: pesananData.status_pesanan || 'diproses',
         created_at: new Date().toISOString()
       };
 
       localStorage.setItem('current_transaction', JSON.stringify(transaksi));
       
+      // 7) Bersihkan cart dan navigasi ke confirmation
       clearCart();
       navigate(`/confirmation/${pesananId}?table=${nomorMeja}`);
     } catch (error) {
@@ -131,6 +201,11 @@ export default function CheckoutPage() {
       </div>
     );
   }
+
+  // compute kopi quantities for UI guidance
+  const { value: totalKopiValue, qty: totalKopiQty } = computeKopiTotals();
+  const maxStampAllowed = totalKopiQty * 10;
+  const userStamps = user?.total_stamp ?? 0;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -238,15 +313,75 @@ export default function CheckoutPage() {
               </div>
             </div>
 
+            {/* STAMP UI */}
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <p className="text-sm font-medium text-gray-800">Gunakan Stamp</p>
+                  <p className="text-xs text-gray-500">Stamp dapat ditukarkan untuk diskon pada menu kategori Kopi</p>
+                </div>
+                <div className="text-sm text-gray-700 font-semibold">
+                  {user ? `${user.total_stamp ?? 0} stamp` : "Harus login"}
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <label className="inline-flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    checked={useStamp}
+                    onChange={(e) => {
+                      setUseStamp(e.target.checked);
+                      if (!e.target.checked) {
+                        setStampAmount(0);
+                        setFinalTotal(getTotalPrice());
+                      }
+                    }}
+                    className="w-5 h-5"
+                  />
+                  <span className="text-sm text-gray-700">Pakai stamp</span>
+                </label>
+
+                {useStamp && (
+                  <div className="flex-1">
+                    <input
+                      type="number"
+                      min={10}
+                      step={10}
+                      value={stampAmount}
+                      onChange={(e) => {
+                        let v = parseInt(e.target.value || 0, 10);
+                        if (Number.isNaN(v)) v = 0;
+                        // clamp min 0
+                        if (v < 0) v = 0;
+                        setStampAmount(v);
+                      }}
+                      className="w-full border rounded-lg px-3 py-2"
+                      placeholder={`Masukkan jumlah stamp (min 10, kelipatan 10). Max ${Math.min(userStamps, maxStampAllowed)} `}
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Max yang bisa digunakan untuk pesanan ini: {maxStampAllowed} stamp. Anda punya {userStamps} stamp.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
             {/* Total */}
             <div className="flex justify-between items-center pt-2">
               <span className="text-lg sm:text-xl font-bold text-gray-900">
                 Total Pembayaran
               </span>
               <span className="text-xl sm:text-2xl font-bold text-green-600">
-                Rp {Math.round(getTotalPrice()).toLocaleString('id-ID')}
+                Rp {Math.round(finalTotal).toLocaleString('id-ID')}
               </span>
             </div>
+
+            {useStamp && stampAmount > 0 && (
+              <div className="mt-3 text-sm text-gray-700">
+                <p>Jika Anda klik Konfirmasi, sistem akan mencoba menggunakan <strong>{stampAmount} stamp</strong>. Jika redeem berhasil, diskon akan diterapkan (20.000 per 10 stamp, dibatasi oleh jumlah Kopi di keranjang).</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -269,7 +404,7 @@ export default function CheckoutPage() {
         {/* Checkout Button */}
         <button
           onClick={handleCheckout}
-          disabled={loading}
+          disabled={loading || (useStamp && redeemLoading)}
           className="w-full bg-[#6d503b] text-white py-4 px-6 rounded-xl font-bold text-base sm:text-lg hover:bg-[#5c4033] disabled:bg-gray-400 disabled:cursor-not-allowed active:scale-95 transition-all shadow-lg"
         >
           {loading ? (
@@ -281,7 +416,7 @@ export default function CheckoutPage() {
               Memproses...
             </span>
           ) : (
-            `Konfirmasi Pesanan - Rp ${Math.round(getTotalPrice()).toLocaleString('id-ID')}`
+            `Konfirmasi Pesanan - Rp ${Math.round(finalTotal).toLocaleString('id-ID')}`
           )}
         </button>
       </div>

@@ -3,9 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\PesananResource;
 use App\Models\Pesanan;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+
+use App\Services\StampService;
+use Illuminate\Support\Facades\DB;
 
 class PesananController extends Controller
 {
@@ -69,70 +73,37 @@ class PesananController extends Controller
     }
 
     // PUT /pesanan/{id}
-    public function update(Request $request, $id)
+   public function update(Request $request, $id)
     {
-        $pesanan = Pesanan::with('detailPesanan')->find($id);
-
+        $pesanan = Pesanan::with('detailPesanan.menu', 'user')->find($id);
         if (!$pesanan) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Pesanan tidak ditemukan'
-            ], 404);
+            return response()->json(['success' => false, 'message' => 'Data Pesanan Tidak Ditemukan!'], 404);
         }
 
         $validator = Validator::make($request->all(), [
-            'nomor_meja'        => 'required|integer',
-            'total_harga'       => 'required|numeric|min:0',
-            'status_pesanan'    => 'required|in:diproses,diantar',
+            'nomor_meja' => 'required|integer',
+            'total_harga' => 'required|numeric|min:0',
+            'status_pesanan' => 'required|in:diproses,diantar',
             'status_pembayaran' => 'required|in:belum_dibayar,lunas',
-            'catatan'           => 'nullable|string',
+            'catatan' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
             return response()->json($validator->errors(), 422);
         }
 
-        $oldStatus = $pesanan->status_pembayaran;
-
-        // Update data pesanan
+        $oldStatusPembayaran = $pesanan->status_pembayaran;
         $pesanan->update($request->all());
 
-        // === LOGIC STAMP ===
-
-        // Jika pembayaran baru berubah menjadi "lunas"
-        if ($oldStatus !== 'lunas' && $request->status_pembayaran === 'lunas') {
-            $stamp = 0;
-
-            foreach ($pesanan->detailPesanan as $item) {
-                if ($item->harga_satuan >= 25000) {
-                    $stamp += $item->jumlah;
-                }
-            }
-
-            $pesanan->jumlah_stamp = $stamp;
-            $pesanan->save();
-
-            // Jika pesanan milik user
-            if ($pesanan->user_id) {
-                $pesanan->user->increment('total_stamp', $stamp);
-            }
+        if (
+            $oldStatusPembayaran !== 'lunas' &&
+            $pesanan->status_pembayaran === 'lunas' &&
+            $pesanan->user_id
+        ) {
+            StampService::addEarnedStamps($pesanan);
         }
-
-        // Jika pembayaran dibatalkan (revert lunas → belum_dibayar)
-        if ($oldStatus === 'lunas' && $request->status_pembayaran === 'belum_dibayar') {
-            if ($pesanan->user_id && $pesanan->jumlah_stamp > 0) {
-                $pesanan->user->decrement('total_stamp', $pesanan->jumlah_stamp);
-            }
-
-            $pesanan->jumlah_stamp = 0;
-            $pesanan->save();
-        }
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Pesanan berhasil diupdate!',
-            'data'    => $pesanan
-        ]);
+        
+        return new PesananResource(true, 'Data Pesanan Berhasil Diubah!', $pesanan->fresh());
     }
 
     // DELETE /pesanan/{id}

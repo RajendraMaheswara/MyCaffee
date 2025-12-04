@@ -6,22 +6,21 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('stamp', function (Blueprint $table) {
+        Schema::create('stamps', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('user_id')->constrained('users')->cascadeOnDelete();
+            $table->foreignId('pesanan_id')->nullable()->constrained('pesanan')->nullOnDelete();
+            $table->enum('tipe', ['earn', 'redeem']);
+            $table->integer('jumlah')->default(0);
+            $table->string('keterangan')->nullable();
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('stamp');
+        Schema::dropIfExists('stamps');
     }
 };

@@ -36,8 +36,8 @@ class User extends Authenticatable
         return $this->hasMany(Pesanan::class, 'kasir_id', 'id');
     }
 
-    public function stampHistories()
+    public function stamps()
     {
-        return $this->hasMany(StampHistory::class);
+        return $this->hasMany(Stamp::class);
     }
 }

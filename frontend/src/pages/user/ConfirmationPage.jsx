@@ -1,3 +1,4 @@
+// pages/ConfirmationPage.jsx
 import { useEffect, useState } from "react";
 import { useParams, Link, useSearchParams } from "react-router-dom";
 
@@ -117,6 +118,13 @@ export default function ConfirmationPage() {
                 </p>
               </div>
             </div>
+
+            {transaksi.redeem_stamp && (
+              <div className="mt-4">
+                <p className="text-sm text-gray-700">Redeem Stamp: <strong>{transaksi.redeem_stamp_amount}</strong></p>
+                <p className="text-sm text-gray-700">Nilai Redeem: <strong>Rp {Math.round(transaksi.redeem_value).toLocaleString('id-ID')}</strong></p>
+              </div>
+            )}
 
             {transaksi.catatan && (
               <div className="mt-4 pt-4 border-t border-gray-200">

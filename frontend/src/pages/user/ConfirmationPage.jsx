@@ -159,13 +159,13 @@ export default function ConfirmationPage() {
                         {item.nama_menu}
                       </h5>
                       <p className="text-xs sm:text-sm text-gray-700 mt-1">
-                        {item.quantity} x Rp {item.harga ? Math.round(item.harga).toLocaleString('id-ID') : '0'}
+                        {item.quantity} x Rp {Math.round(item.harga_satuan).toLocaleString('id-ID')}
                       </p>
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="font-bold text-sm sm:text-base text-[#6d503b]">
-                      Rp {Math.round(item.harga * item.quantity).toLocaleString('id-ID')}
+                      Rp {Math.round(item.subtotal_setelah_diskon ?? item.subtotal).toLocaleString('id-ID')}
                     </p>
                   </div>
                 </div>

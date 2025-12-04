@@ -10,10 +10,12 @@ use App\Http\Controllers\Api\DetailPesananController;
 use App\Http\Controllers\Api\LaporanPenjualanController;
 use App\Http\Controllers\Api\StampController;
 use App\Http\Controllers\Api\PesananRedeemController;
+use App\Http\Controllers\Api\CheckoutController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login',    [AuthController::class, 'login']);
 Route::get('/login-attempts', [AuthController::class, 'loginAttempts']);
+Route::post('/checkout', [CheckoutController::class, 'checkout']);
 
 Route::middleware('auth:sanctum')->group(function () {
 

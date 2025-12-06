@@ -23,6 +23,9 @@ import UserManagement from "./pages/admin/UserManagement";
 import { useContext } from "react";
 import { AuthContext } from "./context/AuthProvider";
 
+import LaporanBulananPage from "./pages/admin/LaporanBulananPage";
+import DesignSystemGuide from "./components/Base";
+
 function App() {
   const { user } = useContext(AuthContext);
   return (
@@ -30,6 +33,8 @@ function App() {
       <Navbar />
       <CartSidebar />
         <Routes>
+          <Route path="/base" element={<DesignSystemGuide />} />
+
           <Route path="/not-found" element={<NotFound />} />
           <Route path="*" element={<NotFound />} />
 
@@ -55,6 +60,14 @@ function App() {
           <Route path="/admin/users" element={<UserManagement />} />
           <Route path="/checkout" element={<CheckoutPage />} /> {/* RUTE BARU */}
           <Route path="/confirmation/:id" element={<ConfirmationPage />} /> {/* RUTE BARU */}
+          <Route
+  path="/admin/laporan"
+  element={
+    <RoleRoute roles={["admin"]}>
+      <LaporanBulananPage />
+    </RoleRoute>
+  }
+/>
         </Routes>
     </Router>
   );

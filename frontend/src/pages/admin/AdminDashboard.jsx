@@ -107,7 +107,13 @@ export default function AdminDashboard() {
               className="p-5 rounded-xl text-left text-gray-800 transition"
               style={{ backgroundColor: "#F5F1ED" }}
             >
-              <div className="text-3xl mb-2 text-center">📊</div>
+              <div className="mb-2 text-center">
+                <svg className="w-10 h-10 mx-auto" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <rect x="3" y="10" width="4" height="11" rx="1" fill="#5C4033" />
+                  <rect x="9" y="6" width="4" height="15" rx="1" fill="#5C4033" />
+                  <rect x="15" y="2" width="4" height="19" rx="1" fill="#5C4033" />
+                </svg>
+              </div>
               <p className="text-sm font-medium mb-2 text-center">Laporan Penjualan</p>
               {loadingStats ? (
                 <p className="text-sm text-gray-500">Memuat...</p>
@@ -123,7 +129,12 @@ export default function AdminDashboard() {
               className="p-5 rounded-xl text-left text-gray-800 transition"
               style={{ backgroundColor: "#F5F1ED" }}
             >
-              <div className="text-3xl mb-2 text-center">📦</div>
+              <div className="mb-2 text-center">
+                <svg className="w-10 h-10 mx-auto" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M3 7l9-4 9 4v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z" fill="#5C4033" />
+                  <path d="M12 3v14" stroke="#F8F5F2" strokeWidth="0.8" opacity="0.2" />
+                </svg>
+              </div>
               <p className="text-sm font-medium mb-2 text-center">Stok Barang</p>
               {loadingStats ? (
                 <p className="text-sm text-gray-500">Memuat...</p>
@@ -139,7 +150,12 @@ export default function AdminDashboard() {
               className="p-5 rounded-xl text-left text-gray-800 transition"
               style={{ backgroundColor: "#F5F1ED" }}
             >
-              <div className="text-3xl mb-2 text-center">💰</div>
+              <div className="mb-2 text-center">
+                <svg className="w-10 h-10 mx-auto" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <circle cx="12" cy="12" r="8" fill="#5C4033" />
+                  <path d="M10.5 8.5c1-.3 2.5-.3 3.5 0 1 .3 1 1.6 0 1.9-1 .3-2.5.3-3.5 0-1-.3-1-1.6 0-1.9z" fill="#F8F5F2" opacity="0.95" />
+                </svg>
+              </div>
               <p className="text-sm font-medium mb-2 text-center">Terjual dan Lunas</p>
               {loadingStats ? (
                 <p className="text-sm text-gray-500">Memuat...</p>
@@ -162,10 +178,13 @@ export default function AdminDashboard() {
             <div className="flex flex-col items-center">
               
               <div
-                className="w-14 h-14 rounded-xl flex items-center justify-center text-white mb-4 text-3xl"
+                className="w-14 h-14 rounded-xl flex items-center justify-center text-white mb-4"
                 style={{ backgroundColor: "#5C4033" }}
               >
-                ☕
+                <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img">
+                  <path d="M3 7h12v6a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M15 8h1a3 3 0 0 1 0 6h-1" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </div>
 
               <h3 className="text-xl font-serif text-gray-800 mb-1">
@@ -191,10 +210,14 @@ export default function AdminDashboard() {
             <div className="flex flex-col items-center">
 
               <div
-                className="w-14 h-14 rounded-xl flex items-center justify-center text-white mb-4 text-3xl"
+                className="w-14 h-14 rounded-xl flex items-center justify-center text-white mb-4"
                 style={{ backgroundColor: "#5C4033" }}
               >
-                👥
+                <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" role="img">
+                  <path d="M8 14c-2.2 0-4 1.8-4 4v1h12v-1c0-2.2-1.8-4-4-4H8z" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                  <circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" />
+                  <path d="M18 11c.8 0 1.5-.7 1.5-1.5S18.8 8 18 8s-1.5.7-1.5 1.5S17.2 11 18 11z" fill="currentColor" opacity="0.9" />
+                </svg>
               </div>
 
               <h3 className="text-xl font-serif text-gray-800 mb-1">

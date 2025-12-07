@@ -225,7 +225,7 @@ export default function AdminDashboard() {
               </h3>
 
               <p className="text-gray-600 text-sm mb-5">
-                Kelola akun admin & kasir.
+                Kelola akun kasir, user, dan admin.
               </p>
 
               <Link

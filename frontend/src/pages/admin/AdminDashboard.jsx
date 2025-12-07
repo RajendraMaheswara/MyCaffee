@@ -91,7 +91,7 @@ export default function AdminDashboard() {
             Selamat Datang, {user?.username || "Admin"}!
           </h1>
           <p className="text-gray-600 text-sm">
-            Kelola data aplikasi MyCaffee melalui menu berikut:
+            Kelola data MyCaffee melalui menu berikut:
           </p>
         </div>
 

@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\LaporanPenjualanController;
 use App\Http\Controllers\Api\StampController;
 use App\Http\Controllers\Api\PesananRedeemController;
 use App\Http\Controllers\Api\CheckoutController;
+use App\Http\Controllers\Api\LaporanBulananController;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login',    [AuthController::class, 'login']);
@@ -42,6 +43,14 @@ Route::middleware('role:kasir,admin')->group(function () {
     // Route untuk menambahkan menu ke pesanan
     Route::post('/pesanan/{id}/add-menu', [PesananController::class, 'addMenuToPesanan']);
     Route::post('/detail-pesanan', [DetailPesananController::class, 'store']);
+});
+
+Route::middleware(['auth:sanctum','role:admin'])->group(function () {
+    Route::get('/laporan/bulanan/operasional', [LaporanBulananController::class, 'operasional']);
+    Route::get('/laporan/bulanan/keuangan',    [LaporanBulananController::class, 'keuangan']);
+    Route::get('/laporan/bulanan/menu',        [LaporanBulananController::class, 'menu']);
+    Route::get('/laporan/bulanan/user',        [LaporanBulananController::class, 'user']);
+    Route::get('/laporan/bulanan/user/export', [LaporanBulananController::class, 'exportUser']);
 });
 
 Route::post('/pesanan', [PesananController::class, 'store']);

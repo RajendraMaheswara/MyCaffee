@@ -7,8 +7,9 @@ import axios from 'axios';
 export default function AdminDashboard() {
   const { user, logout } = useContext(AuthContext);
   const [totalStock, setTotalStock] = useState(0);
+  const [snackSold, setSnackSold] = useState(0);
+  const [kopiSold, setKopiSold] = useState(0);
   const [makananSold, setMakananSold] = useState(0);
-  const [minumanSold, setMinumanSold] = useState(0);
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [loadingStats, setLoadingStats] = useState(true);
   const API_BASE_URL = 'http://127.0.0.1:8000/api';
@@ -29,8 +30,9 @@ export default function AdminDashboard() {
         const orders = Array.isArray(ordersData) ? ordersData : (ordersData.data || []);
 
         let revenue = 0;
-        let foodCount = 0;
-        let drinkCount = 0;
+        let snackCount = 0;
+        let kopiCount = 0;
+        let makananCount = 0;
 
         orders.forEach((order) => {
           const payment = (order.status_pembayaran || order.payment_status || '').toString().toLowerCase();
@@ -45,22 +47,18 @@ export default function AdminDashboard() {
               const qty = Number(d.jumlah || d.quantity || 0) || 0;
               // category may live in relation menu.kategori or in the detail itself
               const kategori = (d.menu?.kategori || d.kategori || d.type || '').toString().toLowerCase();
-              if (kategori.includes('makanan')) foodCount += qty;
-              else if (kategori.includes('minum') || kategori.includes('minuman') || kategori.includes('drink')) drinkCount += qty;
-              else {
-                // fallback: try to detect by nama/menu name keywords
-                const name = (d.menu?.nama_menu || d.nama_menu || '').toString().toLowerCase();
-                if (name.includes('nasi') || name.includes('mie') || name.includes('roti') || name.includes('kue') || name.includes('snack') || name.includes('makanan')) foodCount += qty;
-                else drinkCount += qty;
-              }
+              if (kategori.includes('snack')) snackCount += qty;
+              else if (kategori.includes('kopi')) kopiCount += qty;
+              else if (kategori.includes('makanan')) makananCount += qty;
             });
           }
         });
 
         setTotalStock(stockSum);
         setTotalRevenue(revenue);
-        setMakananSold(foodCount);
-        setMinumanSold(drinkCount);
+        setSnackSold(snackCount);
+        setKopiSold(kopiCount);
+        setMakananSold(makananCount);
       } catch (err) {
         console.error('Gagal mengambil statistik admin:', err);
       } finally {
@@ -119,7 +117,7 @@ export default function AdminDashboard() {
                 <p className="text-sm text-gray-500">Memuat...</p>
               ) : (
                 <>
-                  <p className="text-sm text-gray-800">Total Pesanan Lunas: {makananSold + minumanSold}</p>
+                  <p className="text-sm text-gray-800">Total Pesanan Lunas: {snackSold + kopiSold + makananSold}</p>
                   <p className="text-sm text-gray-600">Total Pendapatan: Rp {Math.round(totalRevenue).toLocaleString('id-ID')}</p>
                 </>
               )}
@@ -161,8 +159,9 @@ export default function AdminDashboard() {
                 <p className="text-sm text-gray-500">Memuat...</p>
               ) : (
                 <>
+                  <p className="text-sm text-gray-700">Snack: <span className="font-semibold">{snackSold}</span></p>
+                  <p className="text-sm text-gray-700">Kopi: <span className="font-semibold">{kopiSold}</span></p>
                   <p className="text-sm text-gray-700">Makanan: <span className="font-semibold">{makananSold}</span></p>
-                  <p className="text-sm text-gray-700">Minuman: <span className="font-semibold">{minumanSold}</span></p>
                 </>
               )}
             </div>

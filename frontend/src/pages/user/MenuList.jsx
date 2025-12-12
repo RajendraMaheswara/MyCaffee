@@ -130,12 +130,24 @@ export default function MenuList() {
       {/* Header */}
       <div className="bg-[#6d503b] text-white py-6 px-4 sticky top-0 z-10 shadow-md">
         <div className="max-w-7xl mx-auto">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center mb-2">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-center">
             MYCAFFEE
           </h1>
-          <p className="text-center text-sm sm:text-base opacity-90">
-            {tableNumber ? `Anda sedang berada di Meja #${tableNumber}` : 'Selamat Datang'}
-          </p>
+          {tableNumber && (
+            <div className="text-center mt-3">
+              <p className="text-sm sm:text-base opacity-90 mb-1">
+                Anda sedang berada di
+              </p>
+              <p className="text-2xl sm:text-3xl font-bold">
+                Meja #{tableNumber}
+              </p>
+            </div>
+          )}
+          {!tableNumber && (
+            <p className="text-center text-sm sm:text-base opacity-90 mt-2">
+              Selamat Datang
+            </p>
+          )}
         </div>
       </div>
 

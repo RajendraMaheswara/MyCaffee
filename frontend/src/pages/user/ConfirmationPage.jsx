@@ -106,6 +106,18 @@ export default function ConfirmationPage() {
                 </p>
               </div>
               <div>
+                <p className="text-xs sm:text-sm text-gray-600 mb-1">Waktu Pemesanan</p>
+                <p className="text-base sm:text-lg font-bold text-gray-900">
+                  {transaksi.created_at ? new Date(transaksi.created_at).toLocaleString('id-ID', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  }) : '-'}
+                </p>
+              </div>
+              <div>
                 <p className="text-xs sm:text-sm text-gray-600 mb-1">Status Pesanan</p>
                 <span className="inline-block bg-yellow-100 text-yellow-800 text-xs sm:text-sm font-semibold px-3 py-1 rounded-full capitalize">
                   {transaksi.status_pesanan || 'Menunggu'}
@@ -120,7 +132,7 @@ export default function ConfirmationPage() {
             </div>
 
             {transaksi.redeem_stamp && (
-              <div className="mt-4">
+              <div className="mt-4 pt-4 border-t border-gray-200">
                 <p className="text-sm text-gray-700">Redeem Stamp: <strong>{transaksi.redeem_stamp_amount}</strong></p>
                 <p className="text-sm text-gray-700">Nilai Redeem: <strong>Rp {Math.round(transaksi.redeem_value).toLocaleString('id-ID')}</strong></p>
               </div>

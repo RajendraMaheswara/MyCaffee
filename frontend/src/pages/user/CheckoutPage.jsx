@@ -37,6 +37,19 @@ export default function CheckoutPage() {
     }
   }, [user]);
 
+  // Hitung total harga dari item kategori kopi saja
+  const getTotalKopiPrice = () => {
+    return cart
+      .filter(item => item.kategori?.toLowerCase() === 'kopi')
+      .reduce((total, item) => total + item.harga * item.quantity, 0);
+  };
+
+  // Hitung stamp yang akan didapat (dari pembelian kopi saja)
+  const getEarnedStamp = () => {
+    const kopiTotal = getTotalKopiPrice();
+    return Math.floor(kopiTotal / 15000);
+  };
+
   const validateStamp = () => {
     setStampError("");
     if (!useStamp) return true;
@@ -107,6 +120,10 @@ export default function CheckoutPage() {
           total_harga: Number(pesanan.total_harga),
           status_pesanan: pesanan.status_pesanan,
           created_at: pesanan.created_at,
+          earned_stamp: pesanan.earned_stamp || 0,
+          redeem_stamp: pesanan.redeem_stamp || false,
+          redeem_stamp_amount: pesanan.redeem_stamp_amount || 0,
+          redeem_value: pesanan.redeem_value || 0,
         };
 
         localStorage.setItem("current_transaction", JSON.stringify(transaksi));
@@ -244,10 +261,17 @@ export default function CheckoutPage() {
                 <span>Subtotal ({cart.length} item)</span>
                 <span>Rp {Math.round(getTotalPrice()).toLocaleString('id-ID')}</span>
               </div>
-              <div className="flex justify-between text-sm text-gray-700">
-                <span>Pajak & Biaya Layanan</span>
-                <span>Rp 0</span>
-              </div>
+              {user && getEarnedStamp() > 0 && (
+                <div className="flex justify-between text-sm text-green-600 font-medium">
+                  <div className="flex items-center gap-1">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                    <span>Stamp yang akan didapat (dari pembelian kopi)</span>
+                  </div>
+                  <span>+{getEarnedStamp()} stamp</span>
+                </div>
+              )}
             </div>
 
             {/* Total */}

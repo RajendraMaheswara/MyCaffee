@@ -288,6 +288,9 @@ export default function KasirDashboard() {
 
   useEffect(() => {
     fetchOrders();
+    const intervalId = setInterval(fetchOrders, 5000); // Refresh every 5 seconds
+
+    return () => clearInterval(intervalId); // Cleanup on unmount
   }, []);
 
   // --- ACTIONS (FIXED: SEND FULL PAYLOAD) ---

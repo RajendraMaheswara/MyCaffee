@@ -69,23 +69,16 @@ export default function AdminDashboard() {
     loadStats();
   }, []);
 
-  // Lock page scrolling while this component is mounted
-  useEffect(() => {
-    const previous = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => {
-      document.body.style.overflow = previous || '';
-    };
-  }, []);
+  // keep default scrolling to allow natural mobile behavior
 
   return (
-    <div className="" style={{ height: '100vh', overflow: 'hidden', backgroundColor: "#F8F5F2" }}>
+    <div className="" style={{ minHeight: '100vh', backgroundColor: "#F8F5F2" }}>
       {/* Main Content */}
       <div className="max-w-5xl mx-auto px-6 py-5 flex flex-col items-center">
 
         {/* Header */}
-        <div className="text-center mb-5">
-          <h1 className="text-4xl font-serif text-gray-900 mb-2">
+        <div className="text-center mb-5 px-2">
+          <h1 className="text-3xl sm:text-4xl font-serif text-gray-900 mb-2">
             Selamat Datang, {user?.username || "Admin"}!
           </h1>
           <p className="text-gray-600 text-sm">
@@ -99,7 +92,7 @@ export default function AdminDashboard() {
             Akses Cepat
           </h2>
 
-          <div className="grid sm:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
             <div
               className="p-5 rounded-xl text-left text-gray-800 transition"
@@ -170,7 +163,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Menu Cards - DIPINDAHKAN KE BAWAH */}
-        <div className="grid sm:grid-cols-2 gap-10 w-full max-w-3xl">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full max-w-3xl px-2">
 
           {/* MENU CARD */}
           <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 hover:shadow-md transition text-center">

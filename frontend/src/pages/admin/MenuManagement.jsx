@@ -95,7 +95,46 @@ const MenuManagement = () => {
           <>
             {menus.length > 0 ? (
               <div className="bg-white rounded-xl shadow-md overflow-hidden">
-                <div className="overflow-x-auto">
+                {/* Mobile list (visible on small screens) */}
+                <div className="block sm:hidden p-4 space-y-4">
+                  {menus.map((menu) => (
+                    <div key={menu.id} className="border rounded-lg p-3 flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-12 h-12 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
+                          {menu.gambar ? (
+                            <img src={menu.gambar} alt={menu.nama_menu} className="w-full h-full object-cover" />
+                          ) : (
+                            <div className="text-gray-400">☕</div>
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-sm font-medium text-gray-900 truncate">{menu.nama_menu}</div>
+                          <div className="text-xs text-gray-500 truncate">{menu.kategori} • {formatPrice(menu.harga)}</div>
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end space-y-2">
+                        <div className="text-sm text-gray-600">Stok: {menu.stok}</div>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => { setEditingMenu(menu); setShowForm(true); }}
+                            className="text-blue-600 hover:text-blue-800 transition text-sm"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDelete(menu.id)}
+                            className="text-red-600 hover:text-red-800 transition text-sm"
+                          >
+                            Hapus
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Desktop table (hidden on small screens) */}
+                <div className="hidden sm:block overflow-x-auto">
                   <table className="w-full">
                     <thead>
                       <tr className="bg-gray-50 border-b border-gray-200">
@@ -268,7 +307,7 @@ const MenuForm = ({ menu, onClose, onSuccess }) => {
       onSuccess();
     } catch (error) {
       console.error('Save error:', error);
-      alert('Terjadi kesalahan saat menyimpan menu. Cek console untuk detail.');
+      alert('Terjadi kesalahan saat menyimpan menu, Cek Lagi woy.');
     } finally {
       setLoading(false);
     }

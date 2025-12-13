@@ -50,6 +50,13 @@ const UserManagement = () => {
     }
   };
 
+  const formatStamp = (peran, stamp) => {
+    if (!peran) return stamp || 0;
+    const role = peran.toString().toLowerCase();
+    if (role === 'admin' || role === 'kasir') return '-';
+    return stamp || 0;
+  };
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#F5F1ED' }}>
       {/* Navigation */}
@@ -100,7 +107,45 @@ const UserManagement = () => {
           <>
             {users.length > 0 ? (
               <div className="bg-white rounded-xl shadow-md overflow-hidden">
-                <div className="overflow-x-auto">
+                {/* Mobile list */}
+                <div className="block sm:hidden p-4 space-y-4">
+                  {users.map((u) => {
+                    const roleBadge = getRoleBadgeColor(u.peran);
+                    return (
+                      <div key={u.id} className="border rounded-lg p-3 flex items-center justify-between">
+                        <div className="flex items-center space-x-3 min-w-0">
+                          <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-500">👤</div>
+                          <div className="min-w-0">
+                            <div className="text-sm font-medium text-gray-900 truncate">{u.username}</div>
+                            <div className="text-xs text-gray-500 truncate">{u.email}</div>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end space-y-2">
+                          <div className="text-xs text-gray-600">
+                            {roleBadge.text} • {formatStamp(u.peran, u.total_stamp)}{formatStamp(u.peran, u.total_stamp) !== '-' ? ' stamp' : ''}
+                          </div>
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => { setEditingUser(u); setShowForm(true); }}
+                              className="text-blue-600 hover:text-blue-800 transition text-sm"
+                            >
+                              Edit
+                            </button>
+                            <button
+                              onClick={() => handleDelete(u.id)}
+                              className="text-red-600 hover:text-red-800 transition text-sm"
+                            >
+                              Hapus
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Desktop table */}
+                <div className="hidden sm:block overflow-x-auto">
                   <table className="w-full">
                     <thead>
                       <tr className="bg-gray-50 border-b border-gray-200">
@@ -137,7 +182,7 @@ const UserManagement = () => {
                               </span>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-semibold" style={{ color: '#5C4033' }}>
-                              {user.total_stamp || 0}
+                              {formatStamp(user.peran, user.total_stamp)}
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                               <div className="flex space-x-3">

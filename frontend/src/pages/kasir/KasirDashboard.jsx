@@ -287,10 +287,28 @@ export default function KasirDashboard() {
   };
 
   useEffect(() => {
-    fetchOrders();
-    const intervalId = setInterval(fetchOrders, 5000); // Refresh every 5 seconds
+    let isMounted = true;
+    let timeoutId;
 
-    return () => clearInterval(intervalId); // Cleanup on unmount
+    const pollOrders = async () => {
+      // Only fetch if the component is still mounted.
+      if (!isMounted) return;
+      
+      await fetchOrders();
+
+      // Schedule the next poll after the current one has finished.
+      if (isMounted) {
+        timeoutId = setTimeout(pollOrders, 5000);
+      }
+    };
+
+    pollOrders(); // Start the first poll.
+
+    // Cleanup function to stop polling when the component unmounts.
+    return () => {
+      isMounted = false;
+      clearTimeout(timeoutId);
+    };
   }, []);
 
   // --- ACTIONS (FIXED: SEND FULL PAYLOAD) ---

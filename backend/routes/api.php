@@ -57,7 +57,10 @@ Route::post('/pesanan', [PesananController::class, 'store']);
 Route::patch('/pesanan/{id}/update-status', [PesananController::class, 'updateStatus']);
 Route::post('/pesanan/{id}/add-menu', [PesananController::class, 'addMenuToPesanan']);
 
-// Resource
+Route::get('/pesanan/user/{id}', [PesananController::class, 'pesananUser'])
+    ->middleware('auth:sanctum');
+
+// Mentahan
 Route::apiResource('/user', UserController::class);
 Route::apiResource('/menu', MenuController::class);
 Route::apiResource('/pesanan', PesananController::class);

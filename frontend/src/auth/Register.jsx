@@ -104,12 +104,15 @@ export default function Register() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setLoading(true);
+        
+        // Hapus hanya error messages, tidak menghapus formData
         setErrors({});
 
         try {
             await api.get("/sanctum/csrf-cookie");
             const res = await api.post("/api/register", formData);
             
+            // Hanya navigate jika berhasil
             navigate("/login", { 
                 state: { 
                     message: "Registrasi berhasil! Silakan login dengan akun Anda.",
@@ -129,8 +132,11 @@ export default function Register() {
                 
                 setErrors(formattedErrors);
             } else {
+                // Tampilkan error dalam bentuk alert atau bisa diganti dengan state
                 alert("Terjadi kesalahan. Silakan coba lagi.");
             }
+            
+            // Data formData TIDAK di-reset, jadi input tetap ada
         } finally {
             setLoading(false);
         }

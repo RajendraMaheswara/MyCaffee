@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect } from "react";
+import { createContext, useState, useEffect, useMemo } from "react";
 import api from "../api/axios";
 
 export const AuthContext = createContext();
@@ -12,7 +12,10 @@ export default function AuthProvider({ children }) {
         if (token) {
             api.get("/api/me")
                 .then((res) => setUser(res.data.user))
-                .catch(() => logout(false))
+                .catch(() => {
+                    // ❗ Fix 1 — Tidak auto-logout (agar tidak trigger rerender)
+                    setUser(null);
+                })
                 .finally(() => setLoading(false));
         } else {
             setLoading(false);
@@ -20,24 +23,27 @@ export default function AuthProvider({ children }) {
     }, [token]);
 
     const login = async (loginData) => {
-        await api.get("/sanctum/csrf-cookie");
+        try {
+            await api.get("/sanctum/csrf-cookie");
 
-        const res = await api.post("/api/login", loginData);
+            const res = await api.post("/api/login", loginData);
 
-        localStorage.setItem("token", res.data.token);
+            localStorage.setItem("token", res.data.token);
 
-        setToken(res.data.token);
-        setUser(res.data.user);
+            setToken(res.data.token);
+            setUser(res.data.user);
 
-        return res.data.user;
+            return res.data.user;
+        } catch (error) {
+            // 🔥 PENTING: Re-throw error agar bisa di-catch di Login.js
+            throw error;
+        }
     };
 
     const logout = async (redirect = true) => {
         try {
             await api.post("/api/logout");
-        } catch (e) {
-            console.log("Logout error:", e);
-        }
+        } catch {}
 
         localStorage.removeItem("token");
         setToken(null);
@@ -46,8 +52,17 @@ export default function AuthProvider({ children }) {
         if (redirect) window.location.href = "/login";
     };
 
+    const contextValue = useMemo(() => ({
+        user,
+        setUser,
+        token,
+        loading,
+        login,
+        logout,
+    }), [user, token, loading]);
+
     return (
-        <AuthContext.Provider value={{ user, token, loading, login, logout }}>
+        <AuthContext.Provider value={contextValue}>
             {children}
         </AuthContext.Provider>
     );

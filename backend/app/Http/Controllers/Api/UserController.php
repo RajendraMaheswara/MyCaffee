@@ -96,7 +96,7 @@ class UserController extends Controller
             'password'     => 'nullable|string|min:4',
             'nama_lengkap' => 'nullable|string|max:100',
             'no_telp' => 'nullable|string|regex:/^[0-9]{10,15}$/|unique:users,no_telp,' . $user->id,
-            'peran'        => 'required|in:admin,kasir,user',
+            // 'peran'        => 'required|in:admin,kasir,user',
             'total_stamp'  => 'nullable|integer|min:0',
         ]);
 
@@ -109,7 +109,7 @@ class UserController extends Controller
             'email'        => $request->email,
             'nama_lengkap' => $request->nama_lengkap,
             'no_telp'      => $request->no_telp,
-            'peran'        => $request->peran,
+            // 'peran'        => $request->peran,
             'total_stamp'  => $request->total_stamp ?? $user->total_stamp,
             'password'     => $request->filled('password') 
                             ? Hash::make($request->password) 

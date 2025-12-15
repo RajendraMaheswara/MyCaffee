@@ -27,6 +27,68 @@ class PesananController extends Controller
         ]);
     }
 
+    public function pesananUser($id)
+    {
+        $pesanan = Pesanan::with('detailPesanan.menu')
+            ->where('user_id', $id)
+            ->orderByDesc('created_at')
+            ->get();
+
+        // Format data untuk frontend dengan perhitungan detail
+        $pesanan = $pesanan->map(function ($order) {
+            // Hitung total diskon dari semua detail pesanan
+            $totalDiskon = $order->detailPesanan->sum('diskon');
+            
+            // Hitung subtotal sebelum diskon
+            $subtotalSebelumDiskon = $order->detailPesanan->sum('subtotal');
+            
+            // Hitung subtotal setelah diskon
+            $subtotalSetelahDiskon = $order->detailPesanan->sum('subtotal_setelah_diskon');
+            
+            return [
+                'id' => $order->id,
+                'user_id' => $order->user_id,
+                'kasir_id' => $order->kasir_id,
+                'nomor_meja' => $order->nomor_meja,
+                'total_harga' => $order->total_harga,
+                'status_pesanan' => $order->status_pesanan,
+                'status_pembayaran' => $order->status_pembayaran,
+                'catatan' => $order->catatan,
+                'created_at' => $order->created_at,
+                'updated_at' => $order->updated_at,
+                'detail_pesanan' => $order->detailPesanan->map(function ($detail) {
+                    return [
+                        'id' => $detail->id,
+                        'menu_id' => $detail->menu_id,
+                        'jumlah' => $detail->jumlah,
+                        'harga_satuan' => $detail->harga_satuan,
+                        'subtotal' => $detail->subtotal,
+                        'diskon' => $detail->diskon ?? 0,
+                        'subtotal_setelah_diskon' => $detail->subtotal_setelah_diskon ?? $detail->subtotal,
+                        'menu' => [
+                            'id' => $detail->menu->id,
+                            'nama_menu' => $detail->menu->nama_menu,
+                            'gambar' => $detail->menu->gambar,
+                            'kategori' => $detail->menu->kategori,
+                        ]
+                    ];
+                }),
+                'ringkasan' => [
+                    'subtotal_sebelum_diskon' => $subtotalSebelumDiskon,
+                    'total_diskon' => $totalDiskon,
+                    'subtotal_setelah_diskon' => $subtotalSetelahDiskon,
+                    'total_bayar' => $order->total_harga,
+                ]
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Riwayat pesanan user',
+            'data'    => $pesanan
+        ]);
+    }
+
     // POST /pesanan
     public function store(Request $request)
     {
@@ -65,10 +127,48 @@ class PesananController extends Controller
             ], 404);
         }
 
+        // Hitung ringkasan
+        $totalDiskon = $pesanan->detailPesanan->sum('diskon');
+        $subtotalSebelumDiskon = $pesanan->detailPesanan->sum('subtotal');
+        $subtotalSetelahDiskon = $pesanan->detailPesanan->sum('subtotal_setelah_diskon');
+
+        $pesananData = [
+            'id' => $pesanan->id,
+            'user_id' => $pesanan->user_id,
+            'kasir_id' => $pesanan->kasir_id,
+            'nomor_meja' => $pesanan->nomor_meja,
+            'total_harga' => $pesanan->total_harga,
+            'status_pesanan' => $pesanan->status_pesanan,
+            'status_pembayaran' => $pesanan->status_pembayaran,
+            'catatan' => $pesanan->catatan,
+            'created_at' => $pesanan->created_at,
+            'updated_at' => $pesanan->updated_at,
+            'kasir' => $pesanan->kasir,
+            'user' => $pesanan->user,
+            'detail_pesanan' => $pesanan->detailPesanan->map(function ($detail) {
+                return [
+                    'id' => $detail->id,
+                    'menu_id' => $detail->menu_id,
+                    'jumlah' => $detail->jumlah,
+                    'harga_satuan' => $detail->harga_satuan,
+                    'subtotal' => $detail->subtotal,
+                    'diskon' => $detail->diskon ?? 0,
+                    'subtotal_setelah_diskon' => $detail->subtotal_setelah_diskon ?? $detail->subtotal,
+                    'menu' => $detail->menu
+                ];
+            }),
+            'ringkasan' => [
+                'subtotal_sebelum_diskon' => $subtotalSebelumDiskon,
+                'total_diskon' => $totalDiskon,
+                'subtotal_setelah_diskon' => $subtotalSetelahDiskon,
+                'total_bayar' => $pesanan->total_harga,
+            ]
+        ];
+
         return response()->json([
             'success' => true,
             'message' => 'Detail pesanan',
-            'data'    => $pesanan
+            'data'    => $pesananData
         ]);
     }
 

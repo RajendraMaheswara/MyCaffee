@@ -13,9 +13,11 @@ export default function Login() {
         password: "",
     });
 
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [successMessage, setSuccessMessage] = useState("");
     const [remainingAttempts, setRemainingAttempts] = useState(null);
     const [lockoutMessage, setLockoutMessage] = useState("");
+    const [errorMessage, setErrorMessage] = useState("");
 
     useEffect(() => {
         if (location.state?.message) {
@@ -31,40 +33,40 @@ export default function Login() {
         }
     }, [location]);
 
-    // Poll remaining attempts while the login input is filled
     useEffect(() => {
         let interval = null;
 
         const fetchAttempts = async () => {
-            if (!form.login) return;
             try {
                 const res = await api.get('/api/login-attempts', { params: { login: form.login } });
                 const data = res.data;
+
                 if (data.locked) {
-                    setLockoutMessage(`Kata sandi salah sebanyak 5 kali. Akun dikunci sementara. Coba lagi dalam ${data.available_in_seconds} detik.`);
+                    setLockoutMessage(
+                        `Kata sandi salah sebanyak 5 kali. Akun dikunci sementara. ` +
+                        `Coba lagi dalam ${data.available_in_seconds} detik.`
+                    );
                     setRemainingAttempts(0);
                 } else {
                     setRemainingAttempts(data.remaining_attempts);
                     setLockoutMessage("");
                 }
-            } catch (e) {
-                // ignore network errors silently
-            }
+            } catch {}
         };
 
-        // fetch immediately and then every 5 seconds
-        if (form.login) {
+        if (!isSubmitting && form.login.trim() !== "") {
             fetchAttempts();
             interval = setInterval(fetchAttempts, 5000);
         }
 
-        return () => {
-            if (interval) clearInterval(interval);
-        };
-    }, [form.login]);
+        return () => clearInterval(interval);
+    }, [form.login, isSubmitting]);
 
     const onSubmit = async (e) => {
         e.preventDefault();
+        setErrorMessage("");
+        setIsSubmitting(true);
+        
         try {
             const user = await login(form);
 
@@ -80,20 +82,26 @@ export default function Login() {
                 navigate("/");
             }
         } catch (err) {
-            // handle API provided remaining attempts or lockout message
+            // 🔥 FIX: Set isSubmitting(false) di awal catch block
+            setIsSubmitting(false);
+            
             const resp = err?.response;
+
             if (resp && resp.data) {
                 if (resp.status === 429) {
                     setLockoutMessage(resp.data.message || "Akun terkunci sementara.");
                     setRemainingAttempts(0);
-                } else if (typeof resp.data.remaining_attempts !== 'undefined') {
+                } else if (typeof resp.data.remaining_attempts !== "undefined") {
                     setRemainingAttempts(resp.data.remaining_attempts);
                     setLockoutMessage("");
                 }
-            }
 
-            // fallback generic alert
-            if (!resp) alert("Login gagal. Periksa koneksi Anda.");
+                if (resp.data.message) {
+                    setErrorMessage(resp.data.message);
+                }
+            } else {
+                setErrorMessage("Login gagal. Periksa koneksi Anda.");
+            }
         }
     };
 
@@ -130,6 +138,20 @@ export default function Login() {
                         </div>
                     )}
 
+                    {/* Error Message */}
+                    {errorMessage && (
+                        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                            <div className="flex items-center">
+                                <svg className="w-5 h-5 text-red-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                                </svg>
+                                <p className="text-sm text-red-800 font-medium">
+                                    {errorMessage}
+                                </p>
+                            </div>
+                        </div>
+                    )}
+
                     <form onSubmit={onSubmit} className="space-y-6">
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -142,9 +164,10 @@ export default function Login() {
                                     setForm({ ...form, login: e.target.value })
                                 }
                                 required
+                                disabled={isSubmitting}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg 
                                            focus:ring-2 focus:ring-[#8B6B47] focus:border-transparent
-                                           transition"
+                                           transition disabled:bg-gray-100 disabled:cursor-not-allowed"
                                 placeholder="Masukkan username atau email"
                             />
                         </div>
@@ -160,12 +183,13 @@ export default function Login() {
                                     setForm({ ...form, password: e.target.value })
                                 }
                                 required
+                                disabled={isSubmitting}
                                 className="w-full px-4 py-3 border border-gray-300 rounded-lg 
                                            focus:ring-2 focus:ring-[#8B6B47] focus:border-transparent
-                                           transition"
+                                           transition disabled:bg-gray-100 disabled:cursor-not-allowed"
                                 placeholder="Masukkan password"
                             />
-                            {/* Remaining attempts / lockout message (moved below password) */}
+                            {/* Remaining attempts / lockout message */}
                             {lockoutMessage ? (
                                 <p className="mt-2 text-sm text-red-700">{lockoutMessage}</p>
                             ) : remainingAttempts !== null ? (
@@ -175,10 +199,12 @@ export default function Login() {
 
                         <button
                             type="submit"
-                            className="w-full py-3 rounded-lg font-semibold text-white transition hover:opacity-90"
+                            disabled={isSubmitting}
+                            className="w-full py-3 rounded-lg font-semibold text-white transition 
+                                     hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
                             style={{ backgroundColor: "#5C4033" }}
                         >
-                            Login
+                            {isSubmitting ? "Memproses..." : "Login"}
                         </button>
                     </form>
 

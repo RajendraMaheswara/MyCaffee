@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Hash;
 use App\Models\User;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
+use Illuminate\Auth\Events\Login;
 
 class AuthController extends Controller
 {
@@ -82,6 +83,8 @@ class AuthController extends Controller
 
         // successful login -> clear attempts
         RateLimiter::clear($key);
+
+        event(new Login('api', $user, false));
 
         $token = $user->createToken('api')->plainTextToken;
 

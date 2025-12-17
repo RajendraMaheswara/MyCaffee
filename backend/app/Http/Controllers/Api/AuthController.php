@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use App\Models\User;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
@@ -13,6 +14,29 @@ class AuthController extends Controller
 {
     public function register(Request $request)
     {
+        // Honeypot: jika field 'website' terisi, anggap sebagai bot
+        if ($request->filled('website')) {
+            return response()->json([
+                'message' => 'Bot detected'
+            ], 403);
+        }
+
+        // Verifikasi Cloudflare Turnstile untuk registrasi
+        $response = Http::asForm()->post(
+            'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+            [
+                'secret' => env('TURNSTILE_SECRET'),
+                'response' => $request->turnstile_token,
+                'remoteip' => $request->ip(),
+            ]
+        );
+
+        if (!($response->json()['success'] ?? false)) {
+            return response()->json([
+                'message' => 'Turnstile verification failed'
+            ], 403);
+        }
+
         $request->validate([
             'username' => 'required|string|max:50|unique:users',
             'email' => 'required|email|unique:users',
@@ -39,6 +63,29 @@ class AuthController extends Controller
 
     public function login(Request $request)
     {
+        // Honeypot: jika field 'website' terisi, anggap sebagai bot
+        if ($request->filled('website')) {
+            return response()->json([
+                'message' => 'Bot detected'
+            ], 403);
+        }
+
+        // Verifikasi Cloudflare Turnstile
+        $response = Http::asForm()->post(
+            'https://challenges.cloudflare.com/turnstile/v0/siteverify',
+            [
+                'secret' => env('TURNSTILE_SECRET'),
+                'response' => $request->turnstile_token,
+                'remoteip' => $request->ip(),
+            ]
+        );
+
+        if (!($response->json()['success'] ?? false)) {
+            return response()->json([
+                'message' => 'Turnstile verification failed'
+            ], 403);
+        }
+
         $request->validate([
             'login'    => 'required',
             'password' => 'required'

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import api from "../api/axios";
 import { Link, useNavigate } from "react-router-dom";
 
@@ -12,7 +12,12 @@ export default function Register() {
         password_confirmation: "",
         nama_lengkap: "",
         no_telp: "",
+        website: "" // honeypot
     });
+
+    // Cloudflare Turnstile
+    const [turnstileToken, setTurnstileToken] = useState("");
+    const turnstileLoaded = useRef(false);
 
     const [errors, setErrors] = useState({});
     const [touched, setTouched] = useState({});
@@ -108,10 +113,24 @@ export default function Register() {
         // Hapus hanya error messages, tidak menghapus formData
         setErrors({});
 
+        // Honeypot client-side guard
+        if (formData.website) {
+            alert('Bot detected');
+            setLoading(false);
+            return;
+        }
+
+        if (!turnstileToken) {
+            alert('Verifikasi captcha diperlukan.');
+            setLoading(false);
+            return;
+        }
+
         try {
             await api.get("/sanctum/csrf-cookie");
-            const res = await api.post("/api/register", formData);
-            
+            const payload = { ...formData, turnstile_token: turnstileToken };
+            const res = await api.post("/api/register", payload);
+
             // Hanya navigate jika berhasil
             navigate("/login", { 
                 state: { 
@@ -141,6 +160,32 @@ export default function Register() {
             setLoading(false);
         }
     };
+
+    useEffect(() => {
+        // Load Turnstile script only once
+        if (!window.turnstile && !turnstileLoaded.current) {
+            const script = document.createElement("script");
+            script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+            script.async = true;
+            script.defer = true;
+            script.onload = () => {
+                turnstileLoaded.current = true;
+                if (window.turnstile) {
+                    window.turnstile.render("#turnstile-container-register", {
+                        sitekey: "0x4AAAAAACHM_YFbipj_w8X4",
+                        callback: setTurnstileToken,
+                    });
+                }
+            };
+            document.body.appendChild(script);
+        } else if (window.turnstile && !turnstileLoaded.current) {
+            turnstileLoaded.current = true;
+            window.turnstile.render("#turnstile-container-register", {
+                sitekey: "0x4AAAAAACHM_YFbipj_w8X4",
+                callback: setTurnstileToken,
+            });
+        }
+    }, []);
 
     return (
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#5C4033] to-[#8B6B47] px-4 py-8">
@@ -296,6 +341,24 @@ export default function Register() {
                         >
                             {loading ? "Mendaftar..." : "Daftar"}
                         </button>
+                        {/* Cloudflare Turnstile */}
+                        <div className="mt-4 flex justify-center">
+                            <div id="turnstile-container-register"></div>
+                        </div>
+
+                        {/* Honeypot hidden field */}
+                        <div style={{ position: "absolute", left: "-9999px", width: 0, height: 0, overflow: "hidden" }} aria-hidden="true">
+                            <label htmlFor="website_register">Website</label>
+                            <input
+                                type="text"
+                                id="website_register"
+                                name="website"
+                                tabIndex="-1"
+                                autoComplete="off"
+                                value={formData.website}
+                                onChange={e => setFormData({ ...formData, website: e.target.value })}
+                            />
+                        </div>
                     </form>
 
                     <div className="mt-6 text-center">

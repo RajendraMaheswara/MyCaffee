@@ -1,4 +1,4 @@
-import { useContext, useState, useEffect } from "react";
+import { useContext, useState, useEffect, useRef } from "react";
 import { AuthContext } from "../context/AuthProvider";
 import api from "../api/axios";
 import { useNavigate, Link, useLocation } from "react-router-dom";
@@ -8,9 +8,40 @@ export default function Login() {
     const navigate = useNavigate();
     const location = useLocation();
 
+    // Cloudflare Turnstile
+    const [turnstileToken, setTurnstileToken] = useState("");
+    const turnstileLoaded = useRef(false);
+
+    useEffect(() => {
+        // Load Turnstile script only once
+        if (!window.turnstile && !turnstileLoaded.current) {
+            const script = document.createElement("script");
+            script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js";
+            script.async = true;
+            script.defer = true;
+            script.onload = () => {
+                turnstileLoaded.current = true;
+                if (window.turnstile) {
+                    window.turnstile.render("#turnstile-container", {
+                        sitekey: "0x4AAAAAACHM_YFbipj_w8X4",
+                        callback: setTurnstileToken,
+                    });
+                }
+            };
+            document.body.appendChild(script);
+        } else if (window.turnstile && !turnstileLoaded.current) {
+            turnstileLoaded.current = true;
+            window.turnstile.render("#turnstile-container", {
+                sitekey: "0x4AAAAAACHM_YFbipj_w8X4",
+                callback: setTurnstileToken,
+            });
+        }
+    }, []);
+
     const [form, setForm] = useState({
         login: "",
         password: "",
+        website: "" // honeypot field
     });
 
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -43,11 +74,23 @@ export default function Login() {
         e.preventDefault();
         setErrorMessage("");
         setIsSubmitting(true);
-        
-        try {
-            const user = await login(form);
 
-            // clear attempt info on success
+        // Honeypot check
+        if (form.website) {
+            setErrorMessage("Bot terdeteksi.");
+            setIsSubmitting(false);
+            return;
+        }
+
+        if (!turnstileToken) {
+            setErrorMessage("Verifikasi captcha diperlukan.");
+            setIsSubmitting(false);
+            return;
+        }
+        try {
+            // Kirim turnstileToken dan honeypot ke backend
+            const user = await login({ ...form, turnstile_token: turnstileToken });
+
             setRemainingAttempts(null);
             setLockoutMessage("");
 
@@ -59,11 +102,8 @@ export default function Login() {
                 navigate("/");
             }
         } catch (err) {
-            // 🔥 FIX: Set isSubmitting(false) di awal catch block
             setIsSubmitting(false);
-            
             const resp = err?.response;
-
             if (resp && resp.data) {
                 if (resp.status === 429) {
                     setLockoutMessage(resp.data.message || "Akun terkunci sementara.");
@@ -72,7 +112,6 @@ export default function Login() {
                     setRemainingAttempts(resp.data.remaining_attempts);
                     setLockoutMessage("");
                 }
-
                 if (resp.data.message) {
                     setErrorMessage(resp.data.message);
                 }
@@ -172,6 +211,25 @@ export default function Login() {
                             ) : remainingAttempts !== null ? (
                                 <p className="mt-2 text-sm text-yellow-700">Sisa percobaan login: {remainingAttempts}</p>
                             ) : null}
+                        </div>
+
+                        {/* Cloudflare Turnstile Captcha */}
+                        <div className="flex justify-center">
+                            <div id="turnstile-container"></div>
+                        </div>
+
+                        {/* Honeypot field (hidden from users, visible to bots) */}
+                        <div style={{ position: "absolute", left: "-9999px", width: 0, height: 0, overflow: "hidden" }} aria-hidden="true">
+                            <label htmlFor="website">Website</label>
+                            <input
+                                type="text"
+                                id="website"
+                                name="website"
+                                tabIndex="-1"
+                                autoComplete="off"
+                                value={form.website}
+                                onChange={e => setForm({ ...form, website: e.target.value })}
+                            />
                         </div>
 
                         <button

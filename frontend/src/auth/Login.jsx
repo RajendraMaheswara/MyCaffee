@@ -33,34 +33,11 @@ export default function Login() {
         }
     }, [location]);
 
+    // Reset remaining attempts ketika user mengubah username atau password
     useEffect(() => {
-        let interval = null;
-
-        const fetchAttempts = async () => {
-            try {
-                const res = await api.get('/api/login-attempts', { params: { login: form.login } });
-                const data = res.data;
-
-                if (data.locked) {
-                    setLockoutMessage(
-                        `Kata sandi salah sebanyak 5 kali. Akun dikunci sementara. ` +
-                        `Coba lagi dalam ${data.available_in_seconds} detik.`
-                    );
-                    setRemainingAttempts(0);
-                } else {
-                    setRemainingAttempts(data.remaining_attempts);
-                    setLockoutMessage("");
-                }
-            } catch {}
-        };
-
-        if (!isSubmitting && form.login.trim() !== "") {
-            fetchAttempts();
-            interval = setInterval(fetchAttempts, 5000);
-        }
-
-        return () => clearInterval(interval);
-    }, [form.login, isSubmitting]);
+        setRemainingAttempts(null);
+        setLockoutMessage("");
+    }, [form.login, form.password]);
 
     const onSubmit = async (e) => {
         e.preventDefault();

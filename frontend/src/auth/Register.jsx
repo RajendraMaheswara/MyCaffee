@@ -5,6 +5,9 @@ import { Link, useNavigate } from "react-router-dom";
 export default function Register() {
     const navigate = useNavigate();
 
+    // Step state: 'form' or 'otp'
+    const [step, setStep] = useState('form');
+
     const [formData, setFormData] = useState({
         username: "",
         email: "",
@@ -14,6 +17,9 @@ export default function Register() {
         no_telp: "",
         website: "" // honeypot
     });
+
+    const [otp, setOtp] = useState("");
+    const [otpTimer, setOtpTimer] = useState(0);
 
     // Cloudflare Turnstile
     const [turnstileToken, setTurnstileToken] = useState("");
@@ -106,14 +112,12 @@ export default function Register() {
         }
     };
 
-    const handleSubmit = async (e) => {
+    // Step 1: Request OTP
+    const handleRequestOtp = async (e) => {
         e.preventDefault();
         setLoading(true);
-        
-        // Hapus hanya error messages, tidak menghapus formData
         setErrors({});
 
-        // Honeypot client-side guard
         if (formData.website) {
             alert('Bot detected');
             setLoading(false);
@@ -128,10 +132,39 @@ export default function Register() {
 
         try {
             await api.get("/sanctum/csrf-cookie");
-            const payload = { ...formData, turnstile_token: turnstileToken };
-            const res = await api.post("/api/register", payload);
+            await api.post("/api/request-otp", { 
+                email: formData.email,
+                turnstile_token: turnstileToken,
+                website: formData.website
+            });
 
-            // Hanya navigate jika berhasil
+            setStep('otp');
+            setOtpTimer(600); // 10 minutes
+            alert('Kode OTP telah dikirim ke email Anda');
+        } catch (err) {
+            if (err.response?.data?.message) {
+                setErrors({ email: err.response.data.message });
+            } else {
+                alert("Terjadi kesalahan. Silakan coba lagi.");
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // Step 2: Verify OTP and Complete Registration
+    const handleVerifyOtp = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setErrors({});
+
+        try {
+            await api.get("/sanctum/csrf-cookie");
+            await api.post("/api/register", {
+                ...formData,
+                otp: otp
+            });
+
             navigate("/login", { 
                 state: { 
                     message: "Registrasi berhasil! Silakan login dengan akun Anda.",
@@ -150,15 +183,46 @@ export default function Register() {
                 });
                 
                 setErrors(formattedErrors);
+            } else if (err.response?.data?.message) {
+                setErrors({ otp: err.response.data.message });
             } else {
-                // Tampilkan error dalam bentuk alert atau bisa diganti dengan state
                 alert("Terjadi kesalahan. Silakan coba lagi.");
             }
-            
-            // Data formData TIDAK di-reset, jadi input tetap ada
         } finally {
             setLoading(false);
         }
+    };
+
+    // Resend OTP
+    const handleResendOtp = async () => {
+        setLoading(true);
+        try {
+            await api.post("/api/resend-otp", { email: formData.email });
+            setOtpTimer(600);
+            alert('Kode OTP baru telah dikirim');
+        } catch (err) {
+            if (err.response?.data?.message) {
+                alert(err.response.data.message);
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // OTP Timer countdown
+    useEffect(() => {
+        if (otpTimer > 0) {
+            const interval = setInterval(() => {
+                setOtpTimer(prev => prev - 1);
+            }, 1000);
+            return () => clearInterval(interval);
+        }
+    }, [otpTimer]);
+
+    const formatTime = (seconds) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return `${mins}:${secs.toString().padStart(2, '0')}`;
     };
 
     useEffect(() => {
@@ -203,165 +267,245 @@ export default function Register() {
                             Jagongan Coffee
                         </h1>
 
-                        <p className="text-gray-600">Daftar Akun Baru</p>
+                        <p className="text-gray-600">
+                            {step === 'form' ? 'Daftar Akun Baru' : 'Verifikasi Email'}
+                        </p>
                     </div>
 
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Nama Lengkap
-                            </label>
-                            <input
-                                type="text"
-                                name="nama_lengkap"
-                                value={formData.nama_lengkap}
-                                onChange={handleChange}
-                                onBlur={handleBlur}
-                                className={`w-full px-4 py-3 border rounded-lg transition
-                                           focus:ring-2 focus:ring-[#8B6B47] focus:border-transparent
-                                           ${errors.nama_lengkap ? 'border-red-500' : 'border-gray-300'}`}
-                                placeholder="Masukkan nama lengkap"
-                            />
-                            {errors.nama_lengkap && (
-                                <p className="text-red-500 text-sm mt-1">{errors.nama_lengkap}</p>
-                            )}
-                        </div>
+                    {/* STEP 1: Registration Form */}
+                    {step === 'form' && (
+                        <form onSubmit={handleRequestOtp} className="space-y-4">
+                            
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Nama Lengkap
+                                </label>
+                                <input
+                                    type="text"
+                                    name="nama_lengkap"
+                                    value={formData.nama_lengkap}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    className={`w-full px-4 py-3 border rounded-lg transition
+                                               focus:ring-2 focus:ring-[#8B6B47] focus:border-transparent
+                                               ${errors.nama_lengkap ? 'border-red-500' : 'border-gray-300'}`}
+                                    placeholder="Masukkan nama lengkap"
+                                />
+                                {errors.nama_lengkap && (
+                                    <p className="text-red-500 text-sm mt-1">{errors.nama_lengkap}</p>
+                                )}
+                            </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Username <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                name="username"
-                                value={formData.username}
-                                onChange={handleChange}
-                                onBlur={handleBlur}
-                                required
-                                className={`w-full px-4 py-3 border rounded-lg transition
-                                           focus:ring-2 focus:ring-[#8B6B47] focus:border-transparent
-                                           ${errors.username ? 'border-red-500' : 'border-gray-300'}`}
-                                placeholder="Masukkan username"
-                            />
-                            {errors.username && (
-                                <p className="text-red-500 text-sm mt-1">{errors.username}</p>
-                            )}
-                        </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Username <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    name="username"
+                                    value={formData.username}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    required
+                                    className={`w-full px-4 py-3 border rounded-lg transition
+                                               focus:ring-2 focus:ring-[#8B6B47] focus:border-transparent
+                                               ${errors.username ? 'border-red-500' : 'border-gray-300'}`}
+                                    placeholder="Masukkan username"
+                                />
+                                {errors.username && (
+                                    <p className="text-red-500 text-sm mt-1">{errors.username}</p>
+                                )}
+                            </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Email <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="email"
-                                name="email"
-                                value={formData.email}
-                                onChange={handleChange}
-                                onBlur={handleBlur}
-                                required
-                                className={`w-full px-4 py-3 border rounded-lg transition
-                                           focus:ring-2 focus:ring-[#8B6B47] focus:border-transparent
-                                           ${errors.email ? 'border-red-500' : 'border-gray-300'}`}
-                                placeholder="Masukkan email"
-                            />
-                            {errors.email && (
-                                <p className="text-red-500 text-sm mt-1">{errors.email}</p>
-                            )}
-                        </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Email <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="email"
+                                    name="email"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    required
+                                    className={`w-full px-4 py-3 border rounded-lg transition
+                                               focus:ring-2 focus:ring-[#8B6B47] focus:border-transparent
+                                               ${errors.email ? 'border-red-500' : 'border-gray-300'}`}
+                                    placeholder="Masukkan email"
+                                />
+                                {errors.email && (
+                                    <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+                                )}
+                            </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Nomor Telp <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="text"
-                                name="no_telp"
-                                value={formData.no_telp}
-                                onChange={handleChange}
-                                onBlur={handleBlur}
-                                required
-                                className={`w-full px-4 py-3 border rounded-lg transition
-                                           focus:ring-2 focus:ring-[#8B6B47] focus:border-transparent
-                                           ${errors.no_telp ? 'border-red-500' : 'border-gray-300'}`}
-                                placeholder="Masukkan nomor telepon"
-                            />
-                            {errors.no_telp  && (
-                                <p className="text-red-500 text-sm mt-1">{errors.no_telp }</p>
-                            )}
-                        </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Nomor Telp <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="text"
+                                    name="no_telp"
+                                    value={formData.no_telp}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    required
+                                    className={`w-full px-4 py-3 border rounded-lg transition
+                                               focus:ring-2 focus:ring-[#8B6B47] focus:border-transparent
+                                               ${errors.no_telp ? 'border-red-500' : 'border-gray-300'}`}
+                                    placeholder="Masukkan nomor telepon"
+                                />
+                                {errors.no_telp  && (
+                                    <p className="text-red-500 text-sm mt-1">{errors.no_telp }</p>
+                                )}
+                            </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Password <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="password"
-                                name="password"
-                                value={formData.password}
-                                onChange={handleChange}
-                                onBlur={handleBlur}
-                                required
-                                className={`w-full px-4 py-3 border rounded-lg transition
-                                           focus:ring-2 focus:ring-[#8B6B47] focus:border-transparent
-                                           ${errors.password ? 'border-red-500' : 'border-gray-300'}`}
-                                placeholder="Minimal 4 karakter"
-                            />
-                            {errors.password && (
-                                <p className="text-red-500 text-sm mt-1">{errors.password}</p>
-                            )}
-                        </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Password <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="password"
+                                    name="password"
+                                    value={formData.password}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    required
+                                    className={`w-full px-4 py-3 border rounded-lg transition
+                                               focus:ring-2 focus:ring-[#8B6B47] focus:border-transparent
+                                               ${errors.password ? 'border-red-500' : 'border-gray-300'}`}
+                                    placeholder="Minimal 4 karakter"
+                                />
+                                {errors.password && (
+                                    <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+                                )}
+                            </div>
 
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Konfirmasi Password <span className="text-red-500">*</span>
-                            </label>
-                            <input
-                                type="password"
-                                name="password_confirmation"
-                                value={formData.password_confirmation}
-                                onChange={handleChange}
-                                onBlur={handleBlur}
-                                required
-                                className={`w-full px-4 py-3 border rounded-lg transition
-                                           focus:ring-2 focus:ring-[#8B6B47] focus:border-transparent
-                                           ${errors.password_confirmation ? 'border-red-500' : 'border-gray-300'}`}
-                                placeholder="Konfirmasi password"
-                            />
-                            {errors.password_confirmation && (
-                                <p className="text-red-500 text-sm mt-1">{errors.password_confirmation}</p>
-                            )}
-                        </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    Konfirmasi Password <span className="text-red-500">*</span>
+                                </label>
+                                <input
+                                    type="password"
+                                    name="password_confirmation"
+                                    value={formData.password_confirmation}
+                                    onChange={handleChange}
+                                    onBlur={handleBlur}
+                                    required
+                                    className={`w-full px-4 py-3 border rounded-lg transition
+                                               focus:ring-2 focus:ring-[#8B6B47] focus:border-transparent
+                                               ${errors.password_confirmation ? 'border-red-500' : 'border-gray-300'}`}
+                                    placeholder="Konfirmasi password"
+                                />
+                                {errors.password_confirmation && (
+                                    <p className="text-red-500 text-sm mt-1">{errors.password_confirmation}</p>
+                                )}
+                            </div>
 
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full py-3 rounded-lg font-semibold text-white transition hover:opacity-90 disabled:opacity-70"
-                            style={{ backgroundColor: "#5C4033" }}
-                        >
-                            {loading ? "Mendaftar..." : "Daftar"}
-                        </button>
-                        {/* Cloudflare Turnstile */}
-                        <div className="mt-4 flex justify-center">
-                            <div id="turnstile-container-register"></div>
-                        </div>
+                            {/* Cloudflare Turnstile */}
+                            <div className="flex justify-center">
+                                <div id="turnstile-container-register"></div>
+                            </div>
 
-                        {/* Honeypot hidden field */}
-                        <div style={{ position: "absolute", left: "-9999px", width: 0, height: 0, overflow: "hidden" }} aria-hidden="true">
-                            <label htmlFor="website_register">Website</label>
-                            <input
-                                type="text"
-                                id="website_register"
-                                name="website"
-                                tabIndex="-1"
-                                autoComplete="off"
-                                value={formData.website}
-                                onChange={e => setFormData({ ...formData, website: e.target.value })}
-                            />
-                        </div>
-                    </form>
+                            <button
+                                type="submit"
+                                disabled={loading}
+                                className="w-full py-3 rounded-lg font-semibold text-white transition hover:opacity-90 disabled:opacity-70"
+                                style={{ backgroundColor: "#5C4033" }}
+                            >
+                                {loading ? "Mengirim OTP..." : "Kirim Kode OTP"}
+                            </button>
 
-                    <div className="mt-6 text-center">
+                            {/* Honeypot hidden field */}
+                            <div style={{ position: "absolute", left: "-9999px", width: 0, height: 0, overflow: "hidden" }} aria-hidden="true">
+                                <label htmlFor="website_register">Website</label>
+                                <input
+                                    type="text"
+                                    id="website_register"
+                                    name="website"
+                                    tabIndex="-1"
+                                    autoComplete="off"
+                                    value={formData.website}
+                                    onChange={e => setFormData({ ...formData, website: e.target.value })}
+                                />
+                            </div>
+                        </form>
+                    )}
+
+                    {/* STEP 2: OTP Verification */}
+                    {step === 'otp' && (
+                        <div className="space-y-6">
+                            <div className="text-center">
+                                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                    </svg>
+                                </div>
+                                <p className="text-gray-600 text-sm">
+                                    Kode verifikasi telah dikirim ke<br />
+                                    <span className="font-semibold text-gray-800">{formData.email}</span>
+                                </p>
+                            </div>
+
+                            <form onSubmit={handleVerifyOtp} className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-2 text-center">
+                                        Masukkan Kode OTP
+                                    </label>
+                                    <input
+                                        type="text"
+                                        value={otp}
+                                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                        maxLength="6"
+                                        required
+                                        className={`w-full px-4 py-3 border rounded-lg text-center text-2xl font-bold tracking-widest
+                                                   focus:ring-2 focus:ring-[#8B6B47] focus:border-transparent
+                                                   ${errors.otp ? 'border-red-500' : 'border-gray-300'}`}
+                                        placeholder="000000"
+                                    />
+                                    {errors.otp && (
+                                        <p className="text-red-500 text-sm mt-1 text-center">{errors.otp}</p>
+                                    )}
+                                </div>
+
+                                {otpTimer > 0 && (
+                                    <p className="text-center text-sm text-gray-600">
+                                        Kode berlaku selama: <span className="font-semibold text-[#5C4033]">{formatTime(otpTimer)}</span>
+                                    </p>
+                                )}
+
+                                <button
+                                    type="submit"
+                                    disabled={loading || otp.length !== 6}
+                                    className="w-full py-3 rounded-lg font-semibold text-white transition hover:opacity-90 disabled:opacity-50"
+                                    style={{ backgroundColor: "#5C4033" }}
+                                >
+                                    {loading ? "Memverifikasi..." : "Verifikasi & Daftar"}
+                                </button>
+
+                                <div className="text-center space-y-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setStep('form')}
+                                        className="text-sm text-gray-600 hover:text-[#5C4033]"
+                                    >
+                                        ← Kembali ke form
+                                    </button>
+                                    <br />
+                                    <button
+                                        type="button"
+                                        onClick={handleResendOtp}
+                                        disabled={loading || otpTimer > 540}
+                                        className="text-sm font-semibold hover:underline disabled:opacity-50"
+                                        style={{ color: "#5C4033" }}
+                                    >
+                                        Kirim ulang kode OTP
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    )}
+
+                    <div className="mt-6 text-center space-y-2">
                         <p className="text-sm text-gray-600">
                             Sudah punya akun?{" "}
                             <Link 

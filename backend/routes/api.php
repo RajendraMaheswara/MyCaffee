@@ -66,3 +66,15 @@ Route::apiResource('/menu', MenuController::class);
 Route::apiResource('/pesanan', PesananController::class);
 Route::apiResource('detail-pesanan', DetailPesananController::class);
 Route::apiResource('/laporan-penjualan', LaporanPenjualanController::class);
+
+// OTP Routes
+// Registration OTP Routes
+Route::post('/request-otp', [AuthController::class, 'requestOtp']);
+Route::post('/resend-otp', [AuthController::class, 'resendOtp']);
+Route::post('/register', [AuthController::class, 'register']);
+
+// Reset Password OTP Routes
+Route::post('/request-reset-password-otp', [AuthController::class, 'requestResetPasswordOtp']);
+Route::post('/verify-reset-password-otp', [AuthController::class, 'verifyResetPasswordOtp']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+Route::post('/resend-reset-password-otp', [AuthController::class, 'resendResetPasswordOtp']);

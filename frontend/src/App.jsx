@@ -8,16 +8,17 @@ import RoleRoute from "./routes/RoleRoute";
 import Register from "./auth/Register";
 import Login from "./auth/Login";
 import WhoAmI from "./pages/WhoAmI";
+import ResetPassword from "./auth/ResetPassword";
 
 import UserDashboard from "./pages/user/UserDashboard";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import KasirDashboard from "./pages/kasir/KasirDashboard";
 
-import MenuManagement from "./pages/admin/MenuManagement"; // Tambahkan ini
+import MenuManagement from "./pages/admin/MenuManagement";
 import MenuList from "./pages/user/MenuList";
 import MenuDetail from "./pages/user/MenuDetail";
-import CheckoutPage from "./pages/user/CheckoutPage"; // IMPORT BARU
-import ConfirmationPage from "./pages/user/ConfirmationPage"; // IMPORT BARU
+import CheckoutPage from "./pages/user/CheckoutPage";
+import ConfirmationPage from "./pages/user/ConfirmationPage";
 
 import UserManagement from "./pages/admin/UserManagement";
 import { useContext } from "react";
@@ -40,6 +41,7 @@ function App() {
 
           <Route path="/register" element={<GuestRoute> <Register /></GuestRoute>} />
           <Route path="/login" element={<GuestRoute> <Login /></GuestRoute>} />
+          <Route path="/reset-password" element={<GuestRoute> <ResetPassword /></GuestRoute>} />
           <Route path="/whoami" element={<WhoAmI />} />
 
           <Route path="/admin/dashboard" element={ <RoleRoute  roles={['admin']}> <AdminDashboard /> </RoleRoute >}/>

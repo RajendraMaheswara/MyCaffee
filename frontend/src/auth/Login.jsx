@@ -189,9 +189,11 @@ export default function Login() {
                         </div>
 
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Password
-                            </label>
+                            <div className="flex items-center justify-between mb-2">
+                                <label className="block text-sm font-medium text-gray-700">
+                                    Password
+                                </label>
+                            </div>
                             <input
                                 type="password"
                                 value={form.password}
@@ -211,6 +213,13 @@ export default function Login() {
                             ) : remainingAttempts !== null ? (
                                 <p className="mt-2 text-sm text-yellow-700">Sisa percobaan login: {remainingAttempts}</p>
                             ) : null}
+                            <Link 
+                                    to="/reset-password"
+                                    className="text-sm font-medium hover:underline"
+                                    style={{ color: "#5C4033" }}
+                                >
+                                    Lupa password?
+                            </Link>
                         </div>
 
                         {/* Cloudflare Turnstile Captcha */}

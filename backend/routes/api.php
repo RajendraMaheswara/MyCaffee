@@ -45,14 +45,6 @@ Route::middleware('role:kasir,admin')->group(function () {
     Route::post('/detail-pesanan', [DetailPesananController::class, 'store']);
 });
 
-Route::middleware(['auth:sanctum','role:admin'])->group(function () {
-    Route::get('/laporan/bulanan/operasional', [LaporanBulananController::class, 'operasional']);
-    Route::get('/laporan/bulanan/keuangan',    [LaporanBulananController::class, 'keuangan']);
-    Route::get('/laporan/bulanan/menu',        [LaporanBulananController::class, 'menu']);
-    Route::get('/laporan/bulanan/user',        [LaporanBulananController::class, 'user']);
-    Route::get('/laporan/bulanan/user/export', [LaporanBulananController::class, 'exportUser']);
-});
-
 Route::post('/pesanan', [PesananController::class, 'store']);
 Route::patch('/pesanan/{id}/update-status', [PesananController::class, 'updateStatus']);
 Route::post('/pesanan/{id}/add-menu', [PesananController::class, 'addMenuToPesanan']);
@@ -65,7 +57,6 @@ Route::apiResource('/user', UserController::class);
 Route::apiResource('/menu', MenuController::class);
 Route::apiResource('/pesanan', PesananController::class);
 Route::apiResource('detail-pesanan', DetailPesananController::class);
-Route::apiResource('/laporan-penjualan', LaporanPenjualanController::class);
 
 // OTP Routes
 // Registration OTP Routes

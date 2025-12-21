@@ -25,7 +25,6 @@ import { useContext } from "react";
 import { AuthContext } from "./context/AuthProvider";
 
 import DesignSystemGuide from "./components/Base";
-import LaporanBulananPage from "./pages/admin/LaporanBulananPage";
 
 function App() {
   const { user } = useContext(AuthContext);
@@ -60,7 +59,6 @@ function App() {
           <Route path="/admin/dashboard" element={<AdminDashboard />} />
           <Route path="/admin/menu" element={<MenuManagement />} />
           <Route path="/admin/users" element={<UserManagement />} />
-          <Route path="/admin/laporan" element={<LaporanBulananPage />} />
 
 
           <Route path="/checkout" element={<CheckoutPage />} /> {/* RUTE BARU */}
